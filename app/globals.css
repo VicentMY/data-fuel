@@ -1,0 +1,304 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+}
+
+/* ─── Design Tokens ─── */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f9fafb;
+
+  --accent-green: #22c55e;
+  --accent-green-dim: #16a34a;
+  --accent-orange: #f97316;
+  --accent-orange-dim: #ea580c;
+  --accent-blue: #3b82f6;
+  --accent-blue-dim: #2563eb;
+  --accent-purple: #a855f7;
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(59, 130, 246, 0.5);
+
+  --glow-green: 0 0 20px rgba(34, 197, 94, 0.15);
+  --glow-orange: 0 0 20px rgba(249, 115, 22, 0.15);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2230;
+  --bg-sidebar: #0f1419;
+
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-active: rgba(59, 130, 246, 0.4);
+
+  --glow-green: 0 0 20px rgba(34, 197, 94, 0.3);
+  --glow-orange: 0 0 20px rgba(249, 115, 22, 0.3);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.25);
+}
+
+/* ─── Reset ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#__next {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ─── Leaflet overrides ─── */
+.leaflet-container {
+  background: #1a2035 !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+  transition: background var(--transition-fast) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--bg-secondary) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--text-secondary) !important;
+}
+
+/* ─── Custom Marker ─── */
+.fuel-marker {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dim));
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glow-green), 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.dark .fuel-marker {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fuel-marker.cheap {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+.fuel-marker.mid {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.fuel-marker.expensive {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.fuel-marker-inner {
+  transform: rotate(45deg);
+  font-size: 11px;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+/* ─── Selection Pin (Chincheta) ─── */
+.selection-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+}
+
+.pin-head {
+  width: 30px;
+  height: 30px;
+  background: var(--accent-orange);
+  border: 3px solid white;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-head::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.pin-point {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 15px solid white;
+  margin-top: -3px;
+}
+
+.pin-point::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent-orange);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: pulse-dot 2s infinite;
+}
+
+/* ─── Radius Circle ─── */
+.radius-circle {
+  stroke: var(--accent-blue) !important;
+  stroke-width: 3px !important;
+  stroke-dasharray: 8 5 !important;
+  fill: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ─── Custom Range Input ─── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.7);
+}
+
+/* ─── Animations ─── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.7;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s ease both;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
+}

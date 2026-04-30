@@ -1,0 +1,187 @@
+"use client";
+
+import { Search, MapPin, Fuel, Zap, Droplet, Clock, Check } from "lucide-react";
+import { cn } from "@/app/lib/utils";
+
+interface SidebarProps {
+  radius: number;
+  setRadius: (r: number) => void;
+  fuelType: string;
+  setFuelType: (f: string) => void;
+  brand: string;
+  setBrand: (b: string) => void;
+  isOpen: boolean;
+  onResetSelection: () => void;
+  isSelectionActive: boolean;
+}
+
+const fuelTypes = [
+  { id: "G95", label: "Gasolina 95", icon: Fuel, color: "bg-green-500" },
+  { id: "DIESEL", label: "Diésel", icon: Droplet, color: "bg-orange-500" },
+  { id: "G98", label: "Gasolina 98", icon: Zap, color: "bg-blue-500" },
+];
+
+const brands = ["Repsol", "Cepsa", "BP", "Galp", "Shell", "Petronor", "Plenoil"];
+
+export default function Sidebar({
+  radius,
+  setRadius,
+  fuelType,
+  setFuelType,
+  brand,
+  setBrand,
+  isOpen,
+  onResetSelection,
+  isSelectionActive,
+}: SidebarProps) {
+  return (
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 w-80 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 overflow-y-auto px-8 py-10",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
+      <div className="flex flex-col gap-10">
+        {/* Search Header */}
+        <section>
+          <h2 className="text-3xl font-extrabold mb-1 text-[var(--text-primary)]">Filtros</h2>
+          <p className="text-[var(--text-secondary)] text-sm mb-8">FuelCartographer v1.2</p>
+
+          <div className="space-y-5">
+            <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-3">
+              Modo de búsqueda
+            </div>
+            <button 
+              onClick={onResetSelection}
+              className={cn(
+                "w-full flex items-center gap-3 px-5 py-4 border rounded-[var(--radius-lg)] text-sm font-semibold transition-all shadow-sm",
+                !isSelectionActive 
+                  ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)]" 
+                  : "bg-[var(--bg-sidebar)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+              )}
+            >
+              <MapPin className={cn("w-5 h-5", !isSelectionActive ? "text-[var(--accent-blue)]" : "")} />
+              Ubicación actual
+            </button>
+            <div className={cn(
+              "w-full flex items-center gap-3 px-5 py-4 border rounded-[var(--radius-lg)] text-sm font-medium transition-all",
+              isSelectionActive 
+                ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-sm"
+                : "bg-transparent border-transparent text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+            )}>
+              <Search className="w-5 h-5" />
+              {isSelectionActive ? "Punto seleccionado" : "Pin no activo"}
+            </div>
+          </div>
+        </section>
+
+        {/* Radius Slider */}
+        <section className="bg-[var(--bg-secondary)]/50 p-6 rounded-[var(--radius-xl)] border border-[var(--border-subtle)]">
+          <div className="flex justify-between items-center mb-6">
+            <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)]">
+              Radio de búsqueda
+            </div>
+            <span className="text-sm font-mono font-bold text-[var(--accent-blue)] bg-[var(--bg-card)] px-3 py-1 rounded-full shadow-sm">{radius} km</span>
+          </div>
+          <div className="px-2">
+            <input
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value={radius}
+              onChange={(e) => setRadius(parseInt(e.target.value))}
+              className="w-full h-2 rounded-lg cursor-pointer accent-[var(--accent-blue)]"
+            />
+            <div className="flex justify-between mt-3 text-[10px] text-[var(--text-muted)] font-bold">
+              <span>1 km</span>
+              <span>50 km</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Fuel Types */}
+        <section>
+          <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-5">
+            Tipo de combustible
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {fuelTypes.map((type) => {
+              const Icon = type.icon;
+              const isActive = fuelType === type.id;
+              return (
+                <button
+                  key={type.id}
+                  onClick={() => setFuelType(type.id)}
+                  className={cn(
+                    "flex items-center justify-between px-5 py-4 rounded-[var(--radius-lg)] transition-all border group",
+                    isActive
+                      ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-md"
+                      : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "p-2 rounded-xl transition-transform group-hover:scale-110",
+                      isActive ? type.color : "bg-[var(--bg-secondary)]"
+                    )}>
+                      <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-[var(--text-secondary)]")} />
+                    </div>
+                    <span className="text-sm font-bold">{type.label}</span>
+                  </div>
+                  {isActive && <div className="w-2 h-2 bg-[var(--accent-blue)] rounded-full animate-pulse shadow-[0_0_8px_var(--accent-blue)]" />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Brands */}
+        <section>
+          <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-5">
+            Marcas favoritas
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {brands.map((b) => (
+              <label
+                key={b}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] cursor-pointer transition-all border",
+                  brand === b
+                    ? "bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] text-[var(--accent-blue)]"
+                    : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+                )}
+                onClick={() => setBrand(brand === b ? "" : b)}
+              >
+                <div
+                  className={cn(
+                    "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                    brand === b
+                      ? "bg-[var(--accent-blue)] border-[var(--accent-blue)]"
+                      : "border-[var(--text-muted)]"
+                  )}
+                >
+                  {brand === b && <Check className="w-3 h-3 text-white" />}
+                </div>
+                <span className="text-xs font-bold whitespace-nowrap">{b}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer info */}
+        <section className="mt-auto">
+          <div className="p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
+              <span className="text-xs font-semibold">Abierto ahora</span>
+            </div>
+            <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
+              Mostrando solo estaciones con precios actualizados hoy.
+            </p>
+          </div>
+        </section>
+      </div>
+    </aside>
+  );
+}
