@@ -76,7 +76,7 @@ export default function BottomPanel({ cheapest, nearest, onSelect }: BottomPanel
       </button>
 
       {/* Saving Estimation Card */}
-      <div className="flex-[1.2] pointer-events-auto bg-[var(--bg-sidebar)]/95 backdrop-blur-xl border border-[var(--border-subtle)] p-6 rounded-[var(--radius-xl)] shadow-2xl animate-fade-in-up [animation-delay:200ms] border-l-4 border-l-[var(--accent-purple)]">
+      <div className="flex-[1.2] pointer-events-auto bg-[var(--bg-sidebar)]/95 backdrop-blur-xl border border-[var(--border-subtle)] p-6 rounded-[var(--radius-xl)] shadow-2xl animate-fade-in-up [animation-delay:200ms] border-l-4 border-l-[var(--accent-purple)]" style={{ padding: "1%" }}>
         <div className="flex justify-between items-start mb-4">
           <p className="text-sm text-[var(--text-secondary)] font-bold leading-snug">
             Ahorro estimado este mes comparando con la media local

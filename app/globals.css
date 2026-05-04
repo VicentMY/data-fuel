@@ -83,6 +83,13 @@ body {
   margin: 0 !important;
 }
 
+header,
+aside,
+section,
+button {
+  padding: 1%;
+}
+
 /* ─── Leaflet overrides ─── */
 .leaflet-container {
   background: #1a2035 !important;
@@ -138,9 +145,11 @@ body {
 .fuel-marker.cheap {
   background: linear-gradient(135deg, #22c55e, #16a34a);
 }
+
 .fuel-marker.mid {
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
+
 .fuel-marker.expensive {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
@@ -160,7 +169,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 
 .pin-head {
@@ -219,13 +228,16 @@ body {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-subtle);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
@@ -264,6 +276,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -271,11 +284,13 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 @keyframes pulse-dot {
+
   0%,
   100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.4);
     opacity: 0.7;
@@ -286,6 +301,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

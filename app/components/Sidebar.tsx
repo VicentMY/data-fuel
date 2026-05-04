@@ -63,7 +63,9 @@ export default function Sidebar({
               <MapPin className={cn("w-5 h-5", !isSelectionActive ? "text-[var(--accent-blue)]" : "")} />
               Ubicación actual
             </button>
-            <div className={cn(
+            <div
+             style={{ padding: "1%" }}
+             className={cn(
               "w-full flex items-center gap-3 px-5 py-4 border rounded-[var(--radius-lg)] text-sm font-medium transition-all",
               isSelectionActive 
                 ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-sm"
@@ -76,12 +78,12 @@ export default function Sidebar({
         </section>
 
         {/* Radius Slider */}
-        <section className="bg-[var(--bg-secondary)]/50 p-6 rounded-[var(--radius-xl)] border border-[var(--border-subtle)]">
+        <section className="bg-[var(--bg-secondary)]/50 p-6 rounded-[var(--radius-xl)] border border-[var(--border-subtle)]" style={{ padding: "5%" }}>
           <div className="flex justify-between items-center mb-6">
             <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)]">
               Radio de búsqueda
             </div>
-            <span className="text-sm font-mono font-bold text-[var(--accent-blue)] bg-[var(--bg-card)] px-3 py-1 rounded-full shadow-sm">{radius} km</span>
+            <span className="text-sm font-mono font-bold text-[var(--accent-blue)] px-3 py-1">{radius} km</span>
           </div>
           <div className="px-2">
             <input
@@ -119,6 +121,7 @@ export default function Sidebar({
                       ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-md"
                       : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   )}
+                  style={{ padding: "5%" }}
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
@@ -171,10 +174,10 @@ export default function Sidebar({
 
         {/* Footer info */}
         <section className="mt-auto">
-          <div className="p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+          <div className="p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)]" style={{ padding: "5%" }}>
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
-              <span className="text-xs font-semibold">Abierto ahora</span>
+              <span className="text-xs font-semibold text-[var(--text-primary)]">Abierto ahora</span>
             </div>
             <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
               Mostrando solo estaciones con precios actualizados hoy.

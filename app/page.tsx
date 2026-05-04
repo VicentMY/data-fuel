@@ -173,7 +173,7 @@ export default function Home() {
 
           {/* Map Overlays - Use higher z-index to stay above Leaflet map panes */}
           <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
-            <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]">
+            <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5%" }}>
               <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{stations[0]?.locality || "Área detectada"}</h4>
               <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
                 {stations.length} estaciones encontradas
