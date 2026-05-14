@@ -24,64 +24,6 @@ function parseSpanishFloat(val: string | undefined): number | null {
   return isNaN(parsed) ? null : parsed;
 }
 
-async function syncData() {
-  console.log("[DB Sync] Consultando MINETUR...");
-  const res = await fetch(
-    "https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/",
-    { headers: { Accept: "application/json" } }
-  );
-
-  if (!res.ok) throw new Error(`MINETUR API error: ${res.status}`);
-  const data = await res.json();
-  const stations = data["ListaEESSPrecio"] as Record<string, string>[];
-
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("TRUNCATE stations");
-
-    const query = `
-      INSERT INTO stations (
-        id, name, address, locality, province, cp, schedule, lat, lon, 
-        price_g95, price_g98, price_diesel, price_diesel_plus, price_glp, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
-    `;
-
-    console.log(`[DB Sync] Insertando ${stations.length} estaciones...`);
-    
-    // Batch processing to avoid overhead
-    for (let i = 0; i < stations.length; i += 100) {
-      const batch = stations.slice(i, i + 100);
-      await Promise.all(batch.map(s => client.query(query, [
-        s["IDEESS"],
-        s["Rótulo"],
-        s["Dirección"],
-        s["Localidad"],
-        s["Provincia"],
-        s["C.P."],
-        s["Horario"],
-        parseSpanishFloat(s["Latitud"]),
-        parseSpanishFloat(s["Longitud (WGS84)"]),
-        parseSpanishFloat(s["Precio Gasolina 95 E5"]),
-        parseSpanishFloat(s["Precio Gasolina 98 E5"]),
-        parseSpanishFloat(s["Precio Gasoleo A"]),
-        parseSpanishFloat(s["Precio Gasoleo Premium"]),
-        parseSpanishFloat(s["Precio Gases licuados del petróleo"])
-      ])));
-    }
-
-    await client.query("COMMIT");
-    console.log("[DB Sync] Sincronización completada.");
-    return data["Fecha"];
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("[DB Sync] Error en la transacción:", err);
-    throw err;
-  } finally {
-    client.release();
-  }
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const lat = parseFloat(searchParams.get("lat") ?? "");
@@ -94,24 +36,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Verificar si el caché en DB es válido
-    const { rows } = await pool.query("SELECT updated_at FROM stations LIMIT 1");
-    const lastUpdate = rows[0]?.updated_at;
-    const now = new Date();
-
-    if (!lastUpdate || (now.getTime() - new Date(lastUpdate).getTime() > CACHE_TTL)) {
-      await syncData();
-    }
-
     // Obtener datos de la DB
-    const { rows: stations } = await pool.query("SELECT * FROM stations");
+    const { rows: stations } = await pool.query("SELECT * FROM estaciones_actual");
 
     const fuelFieldMap: Record<string, string> = {
-      G95: "price_g95",
-      G98: "price_g98",
-      DIESEL: "price_diesel",
-      DIESEL_PLUS: "price_diesel_plus",
-      GLP: "price_glp",
+      G95: "precio_g95",
+      G98: "precio_g98",
+      DIESEL: "precio_diesel",
+      DIESEL_PLUS: "precio_diesel_plus",
+      GLP: "precio_glp",
     };
 
     const fuelField = fuelFieldMap[fuel] ?? fuelFieldMap["G95"];
@@ -127,24 +60,25 @@ export async function GET(req: NextRequest) {
         const price = s[fuelField] ? Number(s[fuelField]) : null;
 
         return {
-          id: s.id,
-          name: s.name || s.address,
-          brand: s.name || "Independiente",
-          address: s.address,
-          locality: s.locality,
-          province: s.province,
+          id: s.id_gasolinera,
+          name: s.nombre || s.direccion,
+          brand: s.nombre || "Independiente",
+          address: s.direccion,
+          locality: s.localidad,
+          province: s.provincia,
           cp: s.cp,
-          schedule: s.schedule,
+          schedule: s.horario,
           lat: sLat,
           lon: sLon,
           dist: Math.round(dist * 1000) / 1000,
           price,
+          updatedAt: s.actualizado,
           prices: {
-            G95: s.price_g95 ? Number(s.price_g95) : null,
-            G98: s.price_g98 ? Number(s.price_g98) : null,
-            DIESEL: s.price_diesel ? Number(s.price_diesel) : null,
-            DIESEL_PLUS: s.price_diesel_plus ? Number(s.price_diesel_plus) : null,
-            GLP: s.price_glp ? Number(s.price_glp) : null,
+            G95: s.precio_g95 ? Number(s.precio_g95) : null,
+            G98: s.precio_g98 ? Number(s.precio_g98) : null,
+            DIESEL: s.precio_diesel ? Number(s.precio_diesel) : null,
+            DIESEL_PLUS: s.precio_diesel_plus ? Number(s.precio_diesel_plus) : null,
+            GLP: s.precio_glp ? Number(s.precio_glp) : null,
           },
         };
       })
@@ -160,13 +94,12 @@ export async function GET(req: NextRequest) {
       count: results.length,
       fuel,
       stations: results,
-      updatedAt: lastUpdate || now,
       cached: true,
     });
   } catch (err) {
     console.error("[gasolineras API]", err);
     return NextResponse.json(
-      { error: "Error al consultar la base de datos o MINETUR" },
+      { error: "Error al consultar la base de datos" },
       { status: 500 }
     );
   }

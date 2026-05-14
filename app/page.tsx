@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import BottomPanel from "./components/BottomPanel";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { isOpenNow, isUpdatedToday } from "./lib/schedule";
 
 // Dynamically import Map to avoid hydration errors with Leaflet
 const FuelMap = dynamic(() => import("./components/FuelMap"), {
@@ -27,6 +28,8 @@ interface Station {
   price: number | null;
   dist: number;
   locality: string;
+  updatedAt: string | null;
+  schedule: string;
 }
 
 export default function Home() {
@@ -41,6 +44,19 @@ export default function Home() {
   const [stations, setStations] = useState<Station[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [onlyUpdatedToday, setOnlyUpdatedToday] = useState(true);
+  const [onlyOpenNow, setOnlyOpenNow] = useState(false);
+
+  // Background ingestion tracking
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [justFinished, setJustFinished] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wasIngesting = useRef(false);
+  const hasCheckedInitialStatus = useRef(false);
+  // Ref so the polling closure always calls the latest fetchStations
+  const fetchStationsRef = useRef<() => void>(() => {});
 
   // Initialize with user location
   useEffect(() => {
@@ -57,6 +73,70 @@ export default function Home() {
     } else {
       setLocation([40.416775, -3.703790]);
     }
+  }, []);
+
+  // Poll /api/status while ingestion is running
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch("/api/status");
+        if (!res.ok) return;
+        const { isIngesting: ing, lastUpdated: lu } = await res.json();
+        setIsIngesting(ing);
+        
+        if (lu) {
+          const lastDate = new Date(lu);
+          setLastUpdated(lastDate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }));
+          
+          // Initial check: if not ingesting but updated recently (< 60s), show success banner ONCE
+          if (!hasCheckedInitialStatus.current) {
+            hasCheckedInitialStatus.current = true;
+            if (!ing) {
+              const secondsSinceUpdate = (new Date().getTime() - lastDate.getTime()) / 1000;
+              if (secondsSinceUpdate < 60) {
+                setJustFinished(true);
+                setTimeout(() => setJustFinished(false), 5000);
+              }
+            }
+          }
+        }
+
+        // Transition: was ingesting → now done → reload stations
+        if (wasIngesting.current && !ing) {
+          setJustFinished(true);
+          // Clear client cache so fresh data is fetched, not cached stale data
+          sessionStorage.clear();
+          fetchStationsRef.current();
+          setTimeout(() => setJustFinished(false), 5000);
+        }
+        
+        wasIngesting.current = ing;
+
+        // If we were ingesting and now it's done, or if it was never ingesting and we've done the initial check,
+        // we can potentially stop the interval if ing is false.
+        if (!ing && pollingRef.current && hasCheckedInitialStatus.current) {
+           // We keep it running just in case? No, the requirement is "appears while ingesting".
+           // But if it's already done, we stop to save resources.
+           clearInterval(pollingRef.current);
+           pollingRef.current = null;
+        }
+      } catch {
+        // Silently ignore network errors during polling
+      }
+    };
+
+    // Initial check
+    checkStatus();
+
+    // Start polling every 3s
+    pollingRef.current = setInterval(checkStatus, 3000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
   }, []);
 
   const fetchStations = useCallback(async () => {
@@ -112,14 +192,23 @@ export default function Home() {
     }
   }, [location, selection, radius, fuelType]);
 
+  // Keep ref in sync so the polling closure always calls the latest version
+  useEffect(() => {
+    fetchStationsRef.current = fetchStations;
+  }, [fetchStations]);
+
   useEffect(() => {
     fetchStations();
   }, [fetchStations, selection]);
 
   // Derived data
-  const filteredStations = stations.filter(s => 
-    !brand || s.brand.toLowerCase().includes(brand.toLowerCase())
-  );
+  const filteredStations = stations.filter(s => {
+    const matchesBrand = !brand || s.brand.toLowerCase().includes(brand.toLowerCase());
+    const matchesUpdated = !onlyUpdatedToday || isUpdatedToday(s.updatedAt);
+    const matchesOpen = !onlyOpenNow || isOpenNow(s.schedule);
+    
+    return matchesBrand && matchesUpdated && matchesOpen;
+  });
 
   const cheapest = filteredStations.length > 0 
     ? [...filteredStations].sort((a, b) => (a.price || 99) - (b.price || 99))[0] 
@@ -138,6 +227,40 @@ export default function Home() {
         onLocationSelect={(lat, lon) => setSelection([lat, lon])}
       />
 
+      {/* Ingestion status banner — between header and content, full width */}
+      {(isIngesting || justFinished) && (
+        <div
+          className={`flex items-center gap-4 px-8 py-3.5 text-sm font-bold border-b shadow-xl transition-all duration-700 relative z-[2000] ${
+            justFinished
+              ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-900/20"
+              : "bg-amber-400 text-amber-950 border-amber-500 shadow-amber-900/20 animate-pulse"
+          }`}
+        >
+          {justFinished ? (
+            <>
+              <div className="bg-white/20 p-1.5 rounded-full shadow-inner">
+                <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />
+              </div>
+              <span className="tracking-tight text-base">¡Precios actualizados con éxito!</span>
+            </>
+          ) : (
+            <>
+              <div className="bg-amber-950/10 p-1.5 rounded-full shadow-inner">
+                <RefreshCw className="w-5 h-5 animate-spin text-amber-950 flex-shrink-0" />
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <span className="tracking-tight text-base">Obteniendo nuevos precios...</span>
+                {lastUpdated && (
+                  <span className="bg-amber-950/10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider w-fit">
+                    Datos actuales: {lastUpdated}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-1 relative overflow-hidden">
         <Sidebar
           radius={radius}
@@ -149,6 +272,10 @@ export default function Home() {
           isOpen={isSidebarOpen}
           onResetSelection={() => setSelection(null)}
           isSelectionActive={!!selection}
+          onlyUpdatedToday={onlyUpdatedToday}
+          setOnlyUpdatedToday={setOnlyUpdatedToday}
+          onlyOpenNow={onlyOpenNow}
+          setOnlyOpenNow={setOnlyOpenNow}
         />
 
         <main className="flex-1 relative">
@@ -174,7 +301,7 @@ export default function Home() {
           {/* Map Overlays - Use higher z-index to stay above Leaflet map panes */}
           <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
             <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5%" }}>
-              <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{stations[0]?.locality || "Área detectada"}</h4>
+              <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
               <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
                 {stations.length} estaciones encontradas
               </p>

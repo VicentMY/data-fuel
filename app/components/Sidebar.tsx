@@ -13,6 +13,10 @@ interface SidebarProps {
   isOpen: boolean;
   onResetSelection: () => void;
   isSelectionActive: boolean;
+  onlyUpdatedToday: boolean;
+  setOnlyUpdatedToday: (v: boolean) => void;
+  onlyOpenNow: boolean;
+  setOnlyOpenNow: (v: boolean) => void;
 }
 
 const fuelTypes = [
@@ -33,6 +37,10 @@ export default function Sidebar({
   isOpen,
   onResetSelection,
   isSelectionActive,
+  onlyUpdatedToday,
+  setOnlyUpdatedToday,
+  onlyOpenNow,
+  setOnlyOpenNow,
 }: SidebarProps) {
   return (
     <aside
@@ -172,16 +180,54 @@ export default function Sidebar({
           </div>
         </section>
 
-        {/* Footer info */}
-        <section className="mt-auto">
-          <div className="p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)]" style={{ padding: "5%" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
-              <span className="text-xs font-semibold text-[var(--text-primary)]">Abierto ahora</span>
+        {/* Filters */}
+        <section className="mt-auto space-y-4">
+          <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-2">
+            Estado
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm">
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
+                <span className="text-sm font-bold text-[var(--text-primary)]">Actualizado hoy</span>
+              </div>
+              <button
+                onClick={() => setOnlyUpdatedToday(!onlyUpdatedToday)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:ring-offset-2",
+                  onlyUpdatedToday ? "bg-[var(--accent-blue)]" : "bg-[var(--bg-secondary)]"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                    onlyUpdatedToday ? "translate-x-6" : "translate-x-1"
+                  )}
+                />
+              </button>
             </div>
-            <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
-              Mostrando solo estaciones con precios actualizados hoy.
-            </p>
+
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm">
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 text-green-500" />
+                <span className="text-sm font-bold text-[var(--text-primary)]">Abierto ahora</span>
+              </div>
+              <button
+                onClick={() => setOnlyOpenNow(!onlyOpenNow)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:ring-offset-2",
+                  onlyOpenNow ? "bg-green-500" : "bg-[var(--bg-secondary)]"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                    onlyOpenNow ? "translate-x-6" : "translate-x-1"
+                  )}
+                />
+              </button>
+            </div>
           </div>
         </section>
       </div>
