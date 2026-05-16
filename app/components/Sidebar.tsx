@@ -55,10 +55,10 @@ export default function Sidebar({
           <h2 className="text-3xl font-extrabold mb-1 text-[var(--text-primary)]">Filtros</h2>
           <p className="text-[var(--text-secondary)] text-sm mb-8">FuelCartographer v1.2</p>
 
-          <div className="space-y-5">
-            <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-3">
-              Modo de búsqueda
-            </div>
+          <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-3">
+            Modo de búsqueda
+          </div>
+          <div className="grid grid-cols-1 gap-2">
             <button 
               onClick={onResetSelection}
               className={cn(
@@ -115,7 +115,7 @@ export default function Sidebar({
           <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-5">
             Tipo de combustible
           </div>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-2">
             {fuelTypes.map((type) => {
               const Icon = type.icon;
               const isActive = fuelType === type.id;
@@ -186,8 +186,8 @@ export default function Sidebar({
             Estado
           </div>
           
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm">
+          <div className="grid grid-cols-1 gap-2">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Actualizado hoy</span>
@@ -208,7 +208,7 @@ export default function Sidebar({
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-green-500" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Abierto ahora</span>

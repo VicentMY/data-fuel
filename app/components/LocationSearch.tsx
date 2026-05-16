@@ -96,11 +96,12 @@ export default function LocationSearch({ onLocationSelect, className }: Location
     <div ref={containerRef} className={cn("relative group w-full", className)}>
       <div className="relative">
         <Search className={cn(
-          "absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors",
+          "absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors",
           isOpen ? "text-[var(--accent-blue)]" : "text-[var(--text-muted)]"
         )} />
         
         <input
+          style={{padding: "1% 35px" }}
           type="text"
           value={query}
           onChange={handleInputChange}
@@ -109,7 +110,7 @@ export default function LocationSearch({ onLocationSelect, className }: Location
           className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl py-3.5 pl-12 pr-12 text-sm font-medium focus:outline-none focus:border-[var(--accent-blue)] focus:bg-[var(--bg-card)] transition-all shadow-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
         />
 
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {isLoading && <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-blue)]" />}
           {query && (
             <button 

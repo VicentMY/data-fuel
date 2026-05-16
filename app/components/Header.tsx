@@ -1,4 +1,4 @@
-import { Search, Map as MapIcon, Bell, Settings, User, Menu, Sun, Moon } from "lucide-react";
+import { Map as MapIcon, Bell, Menu, Sun, Moon, List } from "lucide-react";
 import LocationSearch from "./LocationSearch";
 
 interface HeaderProps {
@@ -6,9 +6,11 @@ interface HeaderProps {
   theme: "light" | "dark";
   onThemeToggle: () => void;
   onLocationSelect: (lat: number, lon: number) => void;
+  viewMode: "map" | "list";
+  onViewToggle: () => void;
 }
 
-export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSelect }: HeaderProps) {
+export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSelect, viewMode, onViewToggle }: HeaderProps) {
   return (
     <header className="h-20 flex items-center justify-between px-8 bg-[var(--bg-primary)] border-b border-[var(--border-subtle)] z-[1001] shadow-sm">
       <div className="flex items-center gap-6">
@@ -33,6 +35,32 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">
+        {/* Map / List view toggle */}
+        <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl gap-2" style={{ padding: "1%" }}>
+          <button
+            onClick={() => viewMode !== "map" && onViewToggle()}
+            title="Vista mapa"
+            className={`p-2 rounded-lg transition-all ${
+              viewMode === "map"
+                ? "bg-[var(--accent-blue)] text-white shadow-md"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <MapIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => viewMode !== "list" && onViewToggle()}
+            title="Vista lista"
+            className={`p-2 rounded-lg transition-all ${
+              viewMode === "list"
+                ? "bg-[var(--accent-blue)] text-white shadow-md"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <nav className="flex items-center gap-2 sm:gap-3">
           <button 
             onClick={onThemeToggle}
@@ -40,9 +68,6 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
             title={theme === "dark" ? "Activar modo claro" : "Activar modo oscuro"}
           >
             {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button className="p-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xl transition-all">
-            <MapIcon className="w-5 h-5" />
           </button>
           <button className="p-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xl transition-all relative">
             <Bell className="w-5 h-5" />

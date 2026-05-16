@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import BottomPanel from "./components/BottomPanel";
+import StationList from "./components/StationList";
+import StationDetails from "./components/StationDetails";
 import { Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
 import { isOpenNow, isUpdatedToday } from "./lib/schedule";
 
@@ -37,8 +39,10 @@ export default function Home() {
   const [fuelType, setFuelType] = useState("G95");
   const [brand, setBrand] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [selection, setSelection] = useState<[number, number] | null>(null);
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [stations, setStations] = useState<Station[]>([]);
@@ -66,12 +70,12 @@ export default function Home() {
           setLocation([pos.coords.latitude, pos.coords.longitude]);
         },
         (err) => {
-          console.warn("Geolocation denied, defaulting to Madrid", err);
-          setLocation([40.416775, -3.703790]); // Madrid default
+          console.warn("Geolocation denied, defaulting to Valencia", err);
+          setLocation([39.4749, -0.3763]); // Valencia default
         }
       );
     } else {
-      setLocation([40.416775, -3.703790]);
+      setLocation([39.4749, -0.3763]);
     }
   }, []);
 
@@ -225,6 +229,8 @@ export default function Home() {
         theme={theme}
         onThemeToggle={() => setTheme(prev => prev === "dark" ? "light" : "dark")}
         onLocationSelect={(lat, lon) => setSelection([lat, lon])}
+        viewMode={viewMode}
+        onViewToggle={() => setViewMode(prev => prev === "map" ? "list" : "map")}
       />
 
       {/* Ingestion status banner — between header and content, full width */}
@@ -278,43 +284,62 @@ export default function Home() {
           setOnlyOpenNow={setOnlyOpenNow}
         />
 
-        <main className="flex-1 relative">
-          {location ? (
-            <FuelMap
-              center={location}
-              radius={radius}
+        <main className="flex-1 relative overflow-hidden">
+          {viewMode === "list" ? (
+            <StationList
               stations={filteredStations}
-              theme={theme}
-              onMarkerClick={(s) => console.log("Selected station:", s)}
-              onMapClick={(lat, lon) => setSelection([lat, lon])}
-              selection={selection}
+              fuelType={fuelType}
+              isLoading={isLoading && !stations.length}
+              onSelect={(id) => setSelectedStationId(id)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
-              <div className="text-center">
-                <Loader2 className="w-12 h-12 animate-spin text-[var(--accent-blue)] mx-auto mb-4" />
-                <p className="text-[var(--text-secondary)] font-medium">Obteniendo ubicación...</p>
+            <>
+              {location ? (
+                <FuelMap
+                  center={location}
+                  radius={radius}
+                  stations={filteredStations}
+                  theme={theme}
+                  onMarkerClick={(s) => console.log("Selected station:", s)}
+                  onMapClick={(lat, lon) => setSelection([lat, lon])}
+                  onSelectStation={(id) => setSelectedStationId(id)}
+                  selection={selection}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
+                  <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-[var(--accent-blue)] mx-auto mb-4" />
+                    <p className="text-[var(--text-secondary)] font-medium">Obteniendo ubicación...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Map Overlays */}
+              <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
+                <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5%" }}>
+                  <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
+                  <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
+                    {stations.length} estaciones encontradas
+                  </p>
+                </div>
               </div>
-            </div>
+
+              <div className="z-[1000] relative">
+                <BottomPanel
+                  cheapest={cheapest}
+                  nearest={nearest}
+                  onSelect={(s) => setSelectedStationId(s.id)}
+                />
+              </div>
+            </>
           )}
 
-          {/* Map Overlays - Use higher z-index to stay above Leaflet map panes */}
-          <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
-            <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5%" }}>
-              <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
-                {stations.length} estaciones encontradas
-              </p>
-            </div>
-          </div>
-
-          <div className="z-[1000] relative">
-            <BottomPanel
-              cheapest={cheapest}
-              nearest={nearest}
-              onSelect={(s) => console.log("Station focused:", s)}
+          {selectedStationId && (
+            <StationDetails
+              stationId={selectedStationId}
+              onClose={() => setSelectedStationId(null)}
             />
-          </div>
+          )}
 
           {isLoading && !stations.length && (
             <div className="absolute inset-0 z-[1100] bg-black/20 backdrop-blur-[2px] flex items-center justify-center">

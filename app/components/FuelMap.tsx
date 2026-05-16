@@ -21,6 +21,7 @@ interface FuelMapProps {
   stations: Station[];
   onMarkerClick?: (station: Station) => void;
   onMapClick?: (lat: number, lon: number) => void;
+  onSelectStation?: (id: string) => void;
   selection?: [number, number] | null;
   theme?: "light" | "dark";
 }
@@ -31,6 +32,7 @@ export default function FuelMap({
   stations, 
   onMarkerClick, 
   onMapClick,
+  onSelectStation,
   selection,
   theme = "dark" 
 }: FuelMapProps) {
@@ -40,6 +42,29 @@ export default function FuelMap({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
   const selectionMarkerRef = useRef<L.Marker | null>(null);
+
+  // Delegated event listener for popup buttons
+  useEffect(() => {
+    const handlePopupClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("popup-ver-mas-btn")) {
+        const stationId = target.getAttribute("data-station-id");
+        if (stationId && onSelectStation) {
+          onSelectStation(stationId);
+        }
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("click", handlePopupClick);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener("click", handlePopupClick);
+      }
+    };
+  }, [onSelectStation]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -177,15 +202,23 @@ export default function FuelMap({
 
       const marker = L.marker([s.lat, s.lon], { icon })
         .bindPopup(`
-          <div class="p-1">
-            <div class="font-bold text-sm mb-1">${s.name}</div>
-            <div class="text-xs text-gray-400 mb-2">${s.address}</div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-semibold">Precio:</span>
-              <span class="text-sm font-bold text-green-400">${s.price.toFixed(3)} €/L</span>
+          <div class="p-2 min-w-[200px]">
+            <div class="font-bold text-sm mb-1 text-[var(--text-primary)]">${s.name}</div>
+            <div class="text-xs text-[var(--text-secondary)] mb-3">${s.address}</div>
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-xs font-semibold opacity-70">Precio:</span>
+              <span class="text-sm font-black text-emerald-500">${s.price.toFixed(3)} €/L</span>
             </div>
+            <button 
+              class="popup-ver-mas-btn w-full py-2 bg-[var(--accent-blue)] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all"
+              data-station-id="${s.id}"
+            >
+              Ver Más Detalles
+            </button>
           </div>
-        `)
+        `, {
+          className: 'custom-leaflet-popup'
+        })
         .on("click", () => onMarkerClick?.(s));
 
       markersLayerRef.current?.addLayer(marker);
