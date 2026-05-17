@@ -137,13 +137,13 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.g95),
-        lineStyle: { width: 3, color: '#3b82f6' },
-        itemStyle: { color: '#3b82f6' },
+        lineStyle: { width: 3, color: '#00c950' },
+        itemStyle: { color: '#00c950' },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [{ offset: 0, color: 'rgba(59, 130, 246, 0.2)' }, { offset: 1, color: 'rgba(59, 130, 246, 0)' }]
+            colorStops: [{ offset: 0, color: 'rgba(0, 201, 80, 0.2)' }, { offset: 1, color: 'rgba(0, 201, 80, 0)' }]
           }
         }
       },
@@ -153,8 +153,15 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.g98),
-        lineStyle: { width: 3, color: '#8b5cf6' },
-        itemStyle: { color: '#8b5cf6' }
+        lineStyle: { width: 3, color: '#2b7fff' },
+        itemStyle: { color: '#2b7fff' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(43, 127, 255, 0.2)' }, { offset: 1, color: 'rgba(43, 127, 255, 0)' }]
+          }
+        }
       },
       {
         name: 'Diesel',
@@ -162,8 +169,15 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.diesel),
-        lineStyle: { width: 3, color: '#10b981' },
-        itemStyle: { color: '#10b981' }
+        lineStyle: { width: 3, color: '#ff6900' },
+        itemStyle: { color: '#ff6900' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(255, 105, 0, 0.2)' }, { offset: 1, color: 'rgba(255, 105, 0, 0)' }]
+          }
+        }
       }
     ]
   };
@@ -212,13 +226,13 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.g95),
-        lineStyle: { width: 3, color: '#3b82f6' },
-        itemStyle: { color: '#3b82f6' },
+        lineStyle: { width: 3, color: '#00c950' },
+        itemStyle: { color: '#00c950' },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [{ offset: 0, color: 'rgba(59, 130, 246, 0.2)' }, { offset: 1, color: 'rgba(59, 130, 246, 0)' }]
+            colorStops: [{ offset: 0, color: 'rgba(0, 201, 80, 0.2)' }, { offset: 1, color: 'rgba(0, 201, 80, 0)' }]
           }
         }
       },
@@ -228,8 +242,15 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.g98),
-        lineStyle: { width: 3, color: '#8b5cf6' },
-        itemStyle: { color: '#8b5cf6' }
+        lineStyle: { width: 3, color: '#2b7fff' },
+        itemStyle: { color: '#2b7fff' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(43, 127, 255, 0.2)' }, { offset: 1, color: 'rgba(43, 127, 255, 0)' }]
+          }
+        }
       },
       {
         name: 'Diesel',
@@ -237,8 +258,15 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         smooth: true,
         showSymbol: false,
         data: history.map(h => h.diesel),
-        lineStyle: { width: 3, color: '#10b981' },
-        itemStyle: { color: '#10b981' }
+        lineStyle: { width: 3, color: '#ff6900' },
+        itemStyle: { color: '#ff6900' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(255, 105, 0, 0.2)' }, { offset: 1, color: 'rgba(255, 105, 0, 0)' }]
+          }
+        }
       }
     ]
   };
@@ -290,9 +318,9 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                 </div>
                 <div className="space-y-4">
                   {[
-                    { label: "Gasolina 95", price: station.prices.G95, color: "text-blue-500" },
-                    { label: "Gasolina 98", price: station.prices.G98, color: "text-purple-500" },
-                    { label: "Diésel A", price: station.prices.DIESEL, color: "text-emerald-500" }
+                    { label: "Gasolina 95", price: station.prices.G95, color: "text-green-500" },
+                    { label: "Gasolina 98", price: station.prices.G98, color: "text-blue-500" },
+                    { label: "Diésel A", price: station.prices.DIESEL, color: "text-orange-500" }
                   ].map((p, i) => (
                     <div key={i} className="flex items-center justify-between group">
                       <span className="text-sm font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">

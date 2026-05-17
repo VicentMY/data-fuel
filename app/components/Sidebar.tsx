@@ -17,6 +17,7 @@ interface SidebarProps {
   setOnlyUpdatedToday: (v: boolean) => void;
   onlyOpenNow: boolean;
   setOnlyOpenNow: (v: boolean) => void;
+  lastUpdated: string | null;
 }
 
 const fuelTypes = [
@@ -41,6 +42,7 @@ export default function Sidebar({
   setOnlyUpdatedToday,
   onlyOpenNow,
   setOnlyOpenNow,
+  lastUpdated,
 }: SidebarProps) {
   return (
     <aside
@@ -52,6 +54,14 @@ export default function Sidebar({
       <div className="flex flex-col gap-10">
         {/* Search Header */}
         <section>
+          {lastUpdated && (
+            <div className="flex items-center gap-2 mb-6 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] text-xs text-[var(--text-secondary)] shadow-sm font-semibold w-full">
+              <Clock className="w-4 h-4 text-[var(--accent-blue)] flex-shrink-0" />
+              <span className="leading-tight">
+                Precios actualizados el <span className="font-extrabold text-[var(--text-primary)]">{lastUpdated}</span>
+              </span>
+            </div>
+          )}
           <h2 className="text-3xl font-extrabold mb-1 text-[var(--text-primary)]">Filtros</h2>
           <p className="text-[var(--text-secondary)] text-sm mb-8">FuelCartographer v1.2</p>
 
@@ -135,7 +145,7 @@ export default function Sidebar({
                     <div className={cn(
                       "p-2 rounded-xl transition-transform group-hover:scale-110",
                       isActive ? type.color : "bg-[var(--bg-secondary)]"
-                    )}>
+                    )} style={{ padding: "5px"}}>
                       <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-[var(--text-secondary)]")} />
                     </div>
                     <span className="text-sm font-bold">{type.label}</span>
@@ -189,27 +199,6 @@ export default function Sidebar({
           <div className="grid grid-cols-1 gap-2">
             <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
               <div className="flex items-center gap-3">
-                <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
-                <span className="text-sm font-bold text-[var(--text-primary)]">Actualizado hoy</span>
-              </div>
-              <button
-                onClick={() => setOnlyUpdatedToday(!onlyUpdatedToday)}
-                className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:ring-offset-2",
-                  onlyUpdatedToday ? "bg-[var(--accent-blue)]" : "bg-[var(--bg-secondary)]"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                    onlyUpdatedToday ? "translate-x-6" : "translate-x-1"
-                  )}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
-              <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-green-500" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Abierto ahora</span>
               </div>
@@ -224,6 +213,27 @@ export default function Sidebar({
                   className={cn(
                     "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
                     onlyOpenNow ? "translate-x-6" : "translate-x-1"
+                  )}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
+                <span className="text-sm font-bold text-[var(--text-primary)]">Actualizado hoy</span>
+              </div>
+              <button
+                onClick={() => setOnlyUpdatedToday(!onlyUpdatedToday)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:ring-offset-2",
+                  onlyUpdatedToday ? "bg-[var(--accent-blue)]" : "bg-[var(--bg-secondary)]"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                    onlyUpdatedToday ? "translate-x-6" : "translate-x-1"
                   )}
                 />
               </button>

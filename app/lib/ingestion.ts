@@ -10,8 +10,9 @@ export let ingestionLastUpdated: Date | null = null;
 
 export async function runInitialIngestion() {
   const client = await pool.connect();
+  let nextRunMs = 30 * 60 * 1000; // Default to 30 minutes
   try {
-    // 1. Ensure system_config exists and set is_ingesting to true
+    // 1. Ensure system_config exists
     await client.query(`
       CREATE TABLE IF NOT EXISTS system_config (
         key VARCHAR(50) PRIMARY KEY,
@@ -23,7 +24,18 @@ export async function runInitialIngestion() {
     // Set ingesting status in DB for cross-process visibility
     await client.query("INSERT INTO system_config (key, value) VALUES ('is_ingesting', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true'");
 
-    // 2. Check if FULL initial ingestion is complete
+    // 2. Check latest historical date and save it
+    const lastHistoricRes = await client.query("SELECT MAX(actualizado) as last_historic FROM estaciones_historico");
+    const lastHistoric = lastHistoricRes.rows[0].last_historic;
+    if (lastHistoric) {
+      await client.query(
+        "INSERT INTO system_config (key, value) VALUES ('last_historic_date', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+        [new Date(lastHistoric).toISOString()]
+      );
+      console.log(`[Ingestion] Last historic date tracked: ${lastHistoric}`);
+    }
+
+    // 3. Check if FULL initial ingestion is complete
     const initResult = await client.query("SELECT value FROM system_config WHERE key = 'initial_ingestion_complete'");
     const isInitComplete = initResult.rows.length > 0 && initResult.rows[0].value === 'true';
 
@@ -42,29 +54,46 @@ export async function runInitialIngestion() {
 
       await client.query("INSERT INTO system_config (key, value) VALUES ('initial_ingestion_complete', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true'");
       console.log("Full initial ingestion completed.");
-      return;
+    } else {
+      // 4. Check if we need to update CURRENT data (30 min rule)
+      const lastUpdateRes = await client.query("SELECT MAX(actualizado) as last_update FROM estaciones_actual");
+      const lastUpdate = lastUpdateRes.rows[0].last_update;
+      const now = new Date();
+
+      if (lastUpdate) {
+        const timeDiff = now.getTime() - new Date(lastUpdate).getTime();
+        const maxAge = 30 * 60 * 1000;
+        if (timeDiff < maxAge) {
+          nextRunMs = maxAge - timeDiff;
+          console.log(`[Ingestion] Data is fresh (updated ${Math.round(timeDiff / 60000)} mins ago). Next check at ${new Date(now.getTime() + nextRunMs)}.`);
+          return;
+        }
+      }
+
+      console.log("[Ingestion] Data is stale (> 30 mins). Updating current prices...");
+      await insertDatosActuales(client);
+      console.log("[Ingestion] Current prices updated successfully.");
     }
-
-    // 3. If init is complete, check if we need to update CURRENT data (30 min rule)
-    const lastUpdateRes = await client.query("SELECT MAX(actualizado) as last_update FROM estaciones_actual");
-    const lastUpdate = lastUpdateRes.rows[0].last_update;
-    const now = new Date();
-
-    if (lastUpdate && (now.getTime() - new Date(lastUpdate).getTime() < 30 * 60 * 1000)) {
-      console.log("[Ingestion] Data is fresh (updated < 30 mins ago). Skipping update.");
-      return;
-    }
-
-    console.log("[Ingestion] Data is stale (> 30 mins). Updating current prices...");
-    await insertDatosActuales(client);
-    console.log("[Ingestion] Current prices updated successfully.");
 
   } catch (error) {
     console.error("Error during ingestion:", error);
   } finally {
     // Always clear ingesting status in DB
-    await client.query("UPDATE system_config SET value = 'false' WHERE key = 'is_ingesting'");
-    client.release();
+    try {
+      await pool.query("UPDATE system_config SET value = 'false' WHERE key = 'is_ingesting'");
+    } catch (e) {}
+    
+    if (client) {
+      try {
+        client.release();
+      } catch (e) {
+        console.error("Error releasing DB client:", e);
+      }
+    }
+    
+    // Schedule next run
+    console.log(`[Ingestion] Scheduling next check in ${Math.round(nextRunMs / 60000)} minutes (${new Date(new Date().getTime() + nextRunMs)}).`);
+    setTimeout(runInitialIngestion, nextRunMs);
   }
 }
 

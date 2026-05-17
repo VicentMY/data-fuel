@@ -7,7 +7,7 @@ import Header from "./components/Header";
 import BottomPanel from "./components/BottomPanel";
 import StationList from "./components/StationList";
 import StationDetails from "./components/StationDetails";
-import { Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, CheckCircle2, Clock } from "lucide-react";
 import { isOpenNow, isUpdatedToday } from "./lib/schedule";
 
 // Dynamically import Map to avoid hydration errors with Leaflet
@@ -90,7 +90,13 @@ export default function Home() {
         
         if (lu) {
           const lastDate = new Date(lu);
-          setLastUpdated(lastDate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }));
+          const formatted = lastDate.toLocaleDateString("es-ES", { 
+            day: "2-digit", 
+            month: "2-digit",
+            hour: "2-digit", 
+            minute: "2-digit" 
+          });
+          setLastUpdated(formatted);
           
           // Initial check: if not ingesting but updated recently (< 60s), show success banner ONCE
           if (!hasCheckedInitialStatus.current) {
@@ -258,7 +264,7 @@ export default function Home() {
                 <span className="tracking-tight text-base">Obteniendo nuevos precios...</span>
                 {lastUpdated && (
                   <span className="bg-amber-950/10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider w-fit">
-                    Datos actuales: {lastUpdated}
+                    Última versión: {lastUpdated}
                   </span>
                 )}
               </div>
@@ -282,6 +288,7 @@ export default function Home() {
           setOnlyUpdatedToday={setOnlyUpdatedToday}
           onlyOpenNow={onlyOpenNow}
           setOnlyOpenNow={setOnlyOpenNow}
+          lastUpdated={lastUpdated}
         />
 
         <main className="flex-1 relative overflow-hidden">
