@@ -51,6 +51,20 @@ function formatDist(km: number): string {
   return `${km.toFixed(1)} km`;
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}, ${hours}:${minutes}`;
+  } catch (e) {
+    return "";
+  }
+}
+
 function SortButton({
   label,
   icon,
@@ -280,6 +294,12 @@ export default function StationList({
                       <Navigation2 className="w-3 h-3" />
                       {formatDist(station.dist)}
                     </span>
+                    {station.updatedAt && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Actualizado: {formatDate(station.updatedAt)}
+                      </span>
+                    )}
                   </div>
                   <p className="text-[11px] text-[var(--text-muted)] truncate mt-0.5">
                     {station.address}

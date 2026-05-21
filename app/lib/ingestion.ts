@@ -56,8 +56,8 @@ export async function runInitialIngestion() {
       console.log("Full initial ingestion completed.");
     } else {
       // 4. Check if we need to update CURRENT data (30 min rule)
-      const lastUpdateRes = await client.query("SELECT MAX(actualizado) as last_update FROM estaciones_actual");
-      const lastUpdate = lastUpdateRes.rows[0].last_update;
+      const lastUpdateRes = await client.query("SELECT value FROM system_config WHERE key = 'last_full_update'");
+      const lastUpdate = lastUpdateRes.rows[0]?.value;
       const now = new Date();
 
       if (lastUpdate) {
@@ -71,8 +71,12 @@ export async function runInitialIngestion() {
       }
 
       console.log("[Ingestion] Data is stale (> 30 mins). Updating current prices...");
-      await insertDatosActuales(client);
-      console.log("[Ingestion] Current prices updated successfully.");
+      try {
+        await insertDatosActuales(client);
+        console.log("[Ingestion] Current prices updated successfully.");
+      } catch (err) {
+        console.warn("[Ingestion] Could not update current prices because the API is offline. Keeping existing database data.");
+      }
     }
 
   } catch (error) {
@@ -179,41 +183,63 @@ async function insertMunicipios(client: any) {
 }
 
 async function insertDatosActuales(client: any) {
-  const res = await fetch(`${URL_BASE}EstacionesTerrestres`);
-  const data = await res.json();
-  for (const item of data.ListaEESSPrecio) {
-    await client.query(`
-      INSERT INTO estaciones_actual (id_gasolinera, nombre, direccion, localidad, provincia, cp, id_municipio, id_provincia, id_ccaa, horario, lat, lon, precio_g95, precio_g98, precio_diesel, precio_diesel_plus, precio_glp, actualizado)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-      ON CONFLICT (id_gasolinera) DO UPDATE SET
-        precio_g95 = EXCLUDED.precio_g95,
-        precio_g98 = EXCLUDED.precio_g98,
-        precio_diesel = EXCLUDED.precio_diesel,
-        precio_diesel_plus = EXCLUDED.precio_diesel_plus,
-        precio_glp = EXCLUDED.precio_glp,
-        actualizado = EXCLUDED.actualizado
-    `, [
-      item.IDEESS,
-      item.Rótulo,
-      item.Dirección,
-      item.Localidad,
-      item.Provincia,
-      item['C.P.'],
-      item.IDMunicipio,
-      item.IDProvincia,
-      item.IDCCAA,
-      item.Horario,
-      parseFloat(item.Latitud.replace(",", ".")),
-      parseFloat(item['Longitud (WGS84)'].replace(",", ".")),
-      parsePrice(item['Precio Gasolina 95 E5']),
-      parsePrice(item['Precio Gasolina 98 E5']),
-      parsePrice(item['Precio Gasoleo A']),
-      parsePrice(item['Precio Gasoleo Premium']),
-      parsePrice(item['Precio Gases licuados del petróleo']),
-      new Date()
-    ]);
+  try {
+    const res = await fetch(`${URL_BASE}EstacionesTerrestres`);
+    if (!res.ok) {
+      throw new Error(`API returned HTTP status ${res.status}`);
+    }
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error(`API returned invalid content type: ${contentType}`);
+    }
+    const data = await res.json();
+    
+    // Mark API status as online
+    await client.query("INSERT INTO system_config (key, value) VALUES ('api_status', 'online') ON CONFLICT (key) DO UPDATE SET value = 'online'");
+
+    for (const item of data.ListaEESSPrecio) {
+      await client.query(`
+        INSERT INTO estaciones_actual (id_gasolinera, nombre, direccion, localidad, provincia, cp, id_municipio, id_provincia, id_ccaa, horario, lat, lon, precio_g95, precio_g98, precio_diesel, precio_diesel_plus, precio_glp, actualizado)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        ON CONFLICT (id_gasolinera) DO UPDATE SET
+          precio_g95 = EXCLUDED.precio_g95,
+          precio_g98 = EXCLUDED.precio_g98,
+          precio_diesel = EXCLUDED.precio_diesel,
+          precio_diesel_plus = EXCLUDED.precio_diesel_plus,
+          precio_glp = EXCLUDED.precio_glp,
+          actualizado = EXCLUDED.actualizado
+      `, [
+        item.IDEESS,
+        item.Rótulo,
+        item.Dirección,
+        item.Localidad,
+        item.Provincia,
+        item['C.P.'],
+        item.IDMunicipio,
+        item.IDProvincia,
+        item.IDCCAA,
+        item.Horario,
+        parseFloat(item.Latitud.replace(",", ".")),
+        parseFloat(item['Longitud (WGS84)'].replace(",", ".")),
+        parsePrice(item['Precio Gasolina 95 E5']),
+        parsePrice(item['Precio Gasolina 98 E5']),
+        parsePrice(item['Precio Gasoleo A']),
+        parsePrice(item['Precio Gasoleo Premium']),
+        parsePrice(item['Precio Gases licuados del petróleo']),
+        new Date()
+      ]);
+    }
+    await client.query("INSERT INTO system_config (key, value) VALUES ('last_full_update', $1) ON CONFLICT (key) DO UPDATE SET value = $1", [new Date().toISOString()]);
+    console.log("Current station data inserted.");
+  } catch (error) {
+    console.error("[Ingestion] API is offline or returned invalid response:", error);
+    try {
+      await client.query("INSERT INTO system_config (key, value) VALUES ('api_status', 'offline') ON CONFLICT (key) DO UPDATE SET value = 'offline'");
+    } catch (dbErr) {
+      console.error("[Ingestion] Failed to write API status to DB:", dbErr);
+    }
+    throw error; // Re-throw to handle it gracefully in the caller
   }
-  console.log("Current station data inserted.");
 }
 
 function parsePrice(price: string) {

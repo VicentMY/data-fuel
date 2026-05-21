@@ -56,6 +56,7 @@ export default function Home() {
   const [isIngesting, setIsIngesting] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [apiStatus, setApiStatus] = useState<"online" | "offline">("online");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wasIngesting = useRef(false);
   const hasCheckedInitialStatus = useRef(false);
@@ -85,8 +86,9 @@ export default function Home() {
       try {
         const res = await fetch("/api/status");
         if (!res.ok) return;
-        const { isIngesting: ing, lastUpdated: lu } = await res.json();
+        const { isIngesting: ing, lastUpdated: lu, apiStatus: apiSt } = await res.json();
         setIsIngesting(ing);
+        if (apiSt) setApiStatus(apiSt);
         
         if (lu) {
           const lastDate = new Date(lu);
@@ -123,10 +125,9 @@ export default function Home() {
         wasIngesting.current = ing;
 
         // If we were ingesting and now it's done, or if it was never ingesting and we've done the initial check,
-        // we can potentially stop the interval if ing is false.
-        if (!ing && pollingRef.current && hasCheckedInitialStatus.current) {
-           // We keep it running just in case? No, the requirement is "appears while ingesting".
-           // But if it's already done, we stop to save resources.
+        // we can potentially stop the interval if ing is false and the API status is online.
+        if (!ing && apiSt === 'online' && pollingRef.current && hasCheckedInitialStatus.current) {
+           // We keep it running if the API is offline to detect when it recovers.
            clearInterval(pollingRef.current);
            pollingRef.current = null;
         }
@@ -214,7 +215,7 @@ export default function Home() {
   // Derived data
   const filteredStations = stations.filter(s => {
     const matchesBrand = !brand || s.brand.toLowerCase().includes(brand.toLowerCase());
-    const matchesUpdated = !onlyUpdatedToday || isUpdatedToday(s.updatedAt);
+    const matchesUpdated = !onlyUpdatedToday || apiStatus === "offline" || isUpdatedToday(s.updatedAt);
     const matchesOpen = !onlyOpenNow || isOpenNow(s.schedule);
     
     return matchesBrand && matchesUpdated && matchesOpen;
@@ -242,7 +243,7 @@ export default function Home() {
       {/* Ingestion status banner — between header and content, full width */}
       {(isIngesting || justFinished) && (
         <div
-          className={`flex items-center gap-4 px-8 py-3.5 text-sm font-bold border-b shadow-xl transition-all duration-700 relative z-[2000] ${
+          className={`flex items-center gap-4 px-8 py-3.5 text-sm font-bold border-b shadow-xl transition-all duration-700 relative z-[50] ${
             justFinished
               ? "bg-emerald-600 text-white border-emerald-700 shadow-emerald-900/20"
               : "bg-amber-400 text-amber-950 border-amber-500 shadow-amber-900/20 animate-pulse"
@@ -272,8 +273,28 @@ export default function Home() {
           )}
         </div>
       )}
+      {/* API offline warning banner */}
+      {apiStatus === "offline" && !isIngesting && (
+        <div className="flex items-center gap-4 px-8 py-3.5 text-sm font-bold bg-rose-500/10 text-rose-500 border-b border-rose-500/20 shadow-xl transition-all duration-700 relative z-[50]">
+          <div className="bg-rose-500/20 p-1.5 rounded-full shadow-inner flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-rose-500" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 leading-tight">
+            <span className="tracking-tight text-base font-extrabold">⚠️ La API de MINETUR no está disponible (Error 503).</span>
+            <span className="opacity-90">Mostrando precios locales guardados de la última actualización del <span className="font-black text-rose-600 underline decoration-2 decoration-rose-500/50">{lastUpdated || "origen desconocido"}</span>.</span>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 relative overflow-hidden">
+        {/* Backdrop for mobile viewport when sidebar is open */}
+        {isSidebarOpen && (
+          <div 
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 z-[2400] bg-black/50 backdrop-blur-sm lg:hidden transition-all duration-300 cursor-pointer"
+          />
+        )}
+
         <Sidebar
           radius={radius}
           setRadius={setRadius}
@@ -289,6 +310,9 @@ export default function Home() {
           onlyOpenNow={onlyOpenNow}
           setOnlyOpenNow={setOnlyOpenNow}
           lastUpdated={lastUpdated}
+          apiStatus={apiStatus}
+          onClose={() => setIsSidebarOpen(false)}
+          onLocationSelect={(lat, lon) => setSelection([lat, lon])}
         />
 
         <main className="flex-1 relative overflow-hidden">
@@ -314,7 +338,7 @@ export default function Home() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
-                  <div className="text-center">
+                  <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4" style={{ padding: "5% 15px" }}>
                     <Loader2 className="w-12 h-12 animate-spin text-[var(--accent-blue)] mx-auto mb-4" />
                     <p className="text-[var(--text-secondary)] font-medium">Obteniendo ubicación...</p>
                   </div>
@@ -323,7 +347,7 @@ export default function Home() {
 
               {/* Map Overlays */}
               <div className="absolute top-8 left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
-                <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5%" }}>
+                <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-6 py-5 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5% 15px" }}>
                   <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
                   <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
                     {stations.length} estaciones encontradas
@@ -350,7 +374,7 @@ export default function Home() {
 
           {isLoading && !stations.length && (
             <div className="absolute inset-0 z-[1100] bg-black/20 backdrop-blur-[2px] flex items-center justify-center">
-              <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
+              <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4" style={{ padding: "5% 15px" }}>
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Actualizando precios...</span>
               </div>

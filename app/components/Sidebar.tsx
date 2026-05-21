@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, MapPin, Fuel, Zap, Droplet, Clock, Check } from "lucide-react";
+import { Search, MapPin, Fuel, Zap, Droplet, Clock, Check, X } from "lucide-react";
 import { cn } from "@/app/lib/utils";
+import LocationSearch from "./LocationSearch";
 
 interface SidebarProps {
   radius: number;
@@ -18,6 +19,9 @@ interface SidebarProps {
   onlyOpenNow: boolean;
   setOnlyOpenNow: (v: boolean) => void;
   lastUpdated: string | null;
+  apiStatus: "online" | "offline";
+  onClose: () => void;
+  onLocationSelect?: (lat: number, lon: number) => void;
 }
 
 const fuelTypes = [
@@ -43,27 +47,64 @@ export default function Sidebar({
   onlyOpenNow,
   setOnlyOpenNow,
   lastUpdated,
+  apiStatus,
+  onClose,
+  onLocationSelect,
 }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 w-80 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 overflow-y-auto px-8 py-10",
+        "fixed inset-y-0 left-0 z-[2500] w-80 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 overflow-y-auto px-8 py-10",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
+      {/* Close button inside sidebar for mobile viewports (< lg) */}
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] lg:hidden transition-all"
+        aria-label="Cerrar barra lateral"
+      >
+        <X className="w-5 h-5" />
+      </button>
       <div className="flex flex-col gap-10">
         {/* Search Header */}
         <section>
           {lastUpdated && (
-            <div className="flex items-center gap-2 mb-6 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] text-xs text-[var(--text-secondary)] shadow-sm font-semibold w-full">
-              <Clock className="w-4 h-4 text-[var(--accent-blue)] flex-shrink-0" />
+            <div className={cn(
+              "flex items-center gap-2 mb-6 px-4 py-3 rounded-[var(--radius-lg)] text-xs shadow-sm font-semibold w-full border transition-all",
+              apiStatus === "offline"
+                ? "bg-rose-500/10 border-rose-500/20 text-rose-500"
+                : "bg-[var(--bg-secondary)] border-[var(--border-subtle)] text-[var(--text-secondary)]"
+            )}>
+              <Clock className={cn("w-4 h-4 flex-shrink-0", apiStatus === "offline" ? "text-rose-500 animate-pulse" : "text-[var(--accent-blue)]")} />
               <span className="leading-tight">
-                Precios actualizados el <span className="font-extrabold text-[var(--text-primary)]">{lastUpdated}</span>
+                {apiStatus === "offline" ? (
+                  <>
+                    API Caída. Precios locales: <span className="font-extrabold text-rose-600">{lastUpdated}</span>
+                  </>
+                ) : (
+                  <>
+                    Precios actualizados el <span className="font-extrabold text-[var(--text-primary)]">{lastUpdated}</span>
+                  </>
+                )}
               </span>
             </div>
           )}
           <h2 className="text-3xl font-extrabold mb-1 text-[var(--text-primary)]">Filtros</h2>
           <p className="text-[var(--text-secondary)] text-sm mb-8">FuelCartographer v1.2</p>
+
+          {/* Location Search — visible only on mobile/tablet viewports (< md) inside the sidebar */}
+          {onLocationSelect && (
+            <div className="block md:hidden mb-8">
+              <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-3">
+                Buscar dirección
+              </div>
+              <LocationSearch onLocationSelect={(lat, lon) => {
+                onLocationSelect(lat, lon);
+                onClose();
+              }} />
+            </div>
+          )}
 
           <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-3">
             Modo de búsqueda

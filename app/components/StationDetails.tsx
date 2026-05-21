@@ -272,13 +272,13 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
   };
 
   return (
-    <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[var(--bg-primary)] w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-md p-4 overflow-y-auto md:flex md:items-center md:justify-center">
+      <div className="bg-[var(--bg-primary)] w-full max-w-4xl rounded-2xl md:rounded-[2rem] shadow-2xl overflow-hidden relative mx-auto my-4 md:my-auto animate-in fade-in zoom-in duration-300">
         {/* Header Image/Pattern */}
         <div className="h-32 bg-gradient-to-r from-[var(--accent-blue)] to-indigo-600 relative">
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-md"
+            className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-md z-10"
           >
             <X className="w-6 h-6" />
           </button>
@@ -294,7 +294,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
               <h2 className="text-3xl font-black text-[var(--text-primary)] leading-tight mb-2">
                 {station.name}
               </h2>
-              <div className="flex items-center gap-4 text-[var(--text-secondary)] font-medium">
+              <div className="flex items-center gap-4 text-[var(--text-secondary)] font-medium flex-wrap">
                 <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]" style={{ padding: "1% 5px", margin: "1% 0 5% 0" }}>
                   <MapPin className="w-4 h-4 text-[var(--accent-blue)]" />
                   {station.locality}, {station.province}
@@ -303,6 +303,12 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                   <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
                   {station.schedule?.toLowerCase().includes("24h") ? "Abierto 24h" : "Ver horario abajo"}
                 </span>
+                {station.updatedAt && (
+                  <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]" style={{ padding: "1% 5px", margin: "1% 0 5% 0" }}>
+                    <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
+                    Actualizado: {formatDate(station.updatedAt)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -399,4 +405,18 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
       </div>
     </div>
   );
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}, ${hours}:${minutes}`;
+  } catch (e) {
+    return "";
+  }
 }
