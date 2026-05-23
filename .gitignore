@@ -41,3 +41,19 @@ yarn-error.log*
 next-env.d.ts
 
 data/
+.continue/
+
+# Agents & AI
+.agents/
+.atl/
+skills-lock.json
+
+# IDE & Editor
+.vscode/
+.idea/
+
+# Temp / Scratch
+scratch/
+tmp/
+*.log
+

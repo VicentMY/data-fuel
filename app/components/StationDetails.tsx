@@ -33,8 +33,11 @@ interface StationDetailsProps {
 export default function StationDetails({ stationId, onClose }: StationDetailsProps) {
   const [station, setStation] = useState<any>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [days, setDays] = useState(7);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const filteredHistory = history.slice(-days);
 
   useEffect(() => {
     async function fetchData() {
@@ -119,7 +122,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: history.map(h => new Date(h.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })),
+      data: filteredHistory.map(h => new Date(h.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })),
       axisLine: { lineStyle: { color: 'rgba(0, 0, 0, 0.08)' } },
       axisLabel: { color: '#9ca3af' }
     },
@@ -136,7 +139,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         type: 'line',
         smooth: true,
         showSymbol: false,
-        data: history.map(h => h.g95),
+        data: filteredHistory.map(h => h.g95),
         lineStyle: { width: 3, color: '#00c950' },
         itemStyle: { color: '#00c950' },
         areaStyle: {
@@ -152,7 +155,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         type: 'line',
         smooth: true,
         showSymbol: false,
-        data: history.map(h => h.g98),
+        data: filteredHistory.map(h => h.g98),
         lineStyle: { width: 3, color: '#2b7fff' },
         itemStyle: { color: '#2b7fff' },
         areaStyle: {
@@ -168,7 +171,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
         type: 'line',
         smooth: true,
         showSymbol: false,
-        data: history.map(h => h.diesel),
+        data: filteredHistory.map(h => h.diesel),
         lineStyle: { width: 3, color: '#ff6900' },
         itemStyle: { color: '#ff6900' },
         areaStyle: {
@@ -369,23 +372,24 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-2 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
                     <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
-                    Evolución de Precios (30 días)
+                    Evolución de Precios ({days} días)
                   </div>
-                  {/* TODO: Ver si es necesario mostrar esto */}
-                  {/* <div className="flex gap-2">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                      <span className="text-[10px] font-bold text-[var(--text-secondary)]">G95</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div>
-                      <span className="text-[10px] font-bold text-[var(--text-secondary)]">G98</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                      <span className="text-[10px] font-bold text-[var(--text-secondary)]">Diesel</span>
-                    </div>
-                  </div> */}
+                  <div className="flex bg-[var(--bg-primary)] p-1 rounded-xl border border-[var(--border-subtle)]" style={{ padding: "1%" }}>
+                    {[7, 15, 30].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDays(d)}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all ${
+                          days === d 
+                            ? "bg-[var(--accent-blue)] text-white shadow-sm" 
+                            : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                        }`}
+                        style={{ margin: "0 5px", padding: "3px" }}
+                      >
+                        {d}D
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex-1 min-h-[350px]">

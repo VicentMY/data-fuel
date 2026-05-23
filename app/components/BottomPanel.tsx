@@ -74,26 +74,6 @@ export default function BottomPanel({ cheapest, nearest, onSelect }: BottomPanel
           </div>
         </div>
       </button>
-
-      {/* Saving Estimation Card - Visible only on large screens */}
-      <div className="hidden lg:block flex-[1.2] pointer-events-auto bg-[var(--bg-sidebar)]/95 backdrop-blur-xl border border-[var(--border-subtle)] p-6 rounded-[var(--radius-xl)] shadow-2xl animate-fade-in-up [animation-delay:200ms] border-l-4 border-l-[var(--accent-purple)]" style={{ padding: "1%" }}>
-        <div className="flex justify-between items-start mb-4">
-          <p className="text-sm text-[var(--text-secondary)] font-bold leading-snug">
-            Ahorro estimado este mes comparando con la media local
-          </p>
-          <div className="p-3 bg-purple-500/10 rounded-2xl">
-            <Wallet className="w-5 h-5 text-purple-400" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-4xl font-black tracking-tighter text-[var(--text-primary)]">
-            12.45 <span className="text-xl font-bold text-[var(--text-muted)] tracking-normal">€</span>
-          </div>
-          <button className="px-5 py-2.5 bg-[var(--bg-card)] hover:bg-[var(--accent-purple)] hover:text-white border border-[var(--border-subtle)] rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md">
-            Ver histórico
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

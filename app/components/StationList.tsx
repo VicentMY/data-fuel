@@ -9,6 +9,7 @@ import {
   ArrowUp,
   ArrowDown,
   Trophy,
+  Star,
   Clock,
   CheckCircle2,
   XCircle,
@@ -29,13 +30,14 @@ interface Station {
   schedule: string;
 }
 
-type SortKey = "price" | "dist" | "locality";
+type SortKey = "price" | "dist" | "locality" | "price-dist";
 
 interface StationListProps {
   stations: Station[];
   fuelType: string;
   isLoading: boolean;
   onSelect: (id: string) => void;
+  onLocate?: (station: Station) => void;
 }
 
 const FUEL_LABELS: Record<string, string> = {
@@ -140,6 +142,7 @@ export default function StationList({
   fuelType,
   isLoading,
   onSelect,
+  onLocate,
 }: StationListProps) {
   const [sortKey, setSortKey] = useState<SortKey>("price");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -162,6 +165,10 @@ export default function StationList({
         cmp = pa - pb;
       } else if (sortKey === "dist") {
         cmp = a.dist - b.dist;
+      } else if (sortKey === "price-dist") {
+        const pa = a.price ?? 99999;
+        const pb = b.price ?? 99999;
+        cmp = (pa * 10 + a.dist * 0.5) - (pb * 10 + b.dist * 0.5);
       } else if (sortKey === "locality") {
         cmp = a.locality.localeCompare(b.locality, "es");
       }
@@ -216,7 +223,7 @@ export default function StationList({
             {FUEL_LABELS[fuelType] || fuelType}
           </span>
         </div>
-        <div className="flex items-center gap-2" style={{ padding: "0 1%" }}>
+        <div className="flex items-center gap-2" style={{ padding: "0 3%" }}>
           <SortButton
             label="Precio"
             icon={<Fuel className="w-3.5 h-3.5" />}
@@ -230,6 +237,13 @@ export default function StationList({
             active={sortKey === "dist"}
             direction={sortDir}
             onClick={() => handleSort("dist")}
+          />
+          <SortButton
+            label="Recomendado"
+            icon={<Star className="w-3.5 h-3.5" />}
+            active={sortKey === "price-dist"}
+            direction={sortDir}
+            onClick={() => handleSort("price-dist")}
           />
           <SortButton
             label="Municipio"
@@ -307,21 +321,34 @@ export default function StationList({
                 </div>
 
                 {/* Price */}
-                <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
                   <PriceBadge rank={priceRank} price={station.price} />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect(station.id);
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
-                    style={{ padding: "5% 10px" }}
-                  >
-                    Ver Más
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                  <div className="flex items-center gap-2">
+                    {onLocate && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onLocate(station);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-[11px] font-black uppercase tracking-wider rounded-xl hover:text-[var(--accent-blue)] hover:border-[var(--accent-blue)] transition-all"
+                      >
+                        Localizar
+                        <MapPin className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(station.id);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
+                      style={{ padding: "5% 10px" }}
+                    >
+                      Ver Más
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>              </div>
             );
           })}
         </div>

@@ -79,6 +79,12 @@ export default function LocationSearch({ onLocationSelect, className }: Location
     }, 500);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && results.length > 0) {
+      handleSelect(results[0]);
+    }
+  };
+  
   const handleSelect = (result: NominationResult) => {
     onLocationSelect(parseFloat(result.lat), parseFloat(result.lon));
     setQuery(result.display_name.split(",")[0]);
@@ -105,6 +111,7 @@ export default function LocationSearch({ onLocationSelect, className }: Location
           type="text"
           value={query}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           onFocus={() => query.length >= 3 && setIsOpen(true)}
           placeholder="Buscar municipio o código postal..."
           className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl py-3.5 pl-12 pr-12 text-sm font-medium focus:outline-none focus:border-[var(--accent-blue)] focus:bg-[var(--bg-card)] transition-all shadow-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"

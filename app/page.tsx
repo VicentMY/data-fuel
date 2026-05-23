@@ -7,7 +7,7 @@ import Header from "./components/Header";
 import BottomPanel from "./components/BottomPanel";
 import StationList from "./components/StationList";
 import StationDetails from "./components/StationDetails";
-import { Loader2, AlertCircle, RefreshCw, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
 import { isOpenNow, isUpdatedToday } from "./lib/schedule";
 
 // Dynamically import Map to avoid hydration errors with Leaflet
@@ -43,6 +43,7 @@ export default function Home() {
   const [selection, setSelection] = useState<[number, number] | null>(null);
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [highlightedStationId, setHighlightedStationId] = useState<string | null>(null);
   
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [stations, setStations] = useState<Station[]>([]);
@@ -322,6 +323,11 @@ export default function Home() {
               fuelType={fuelType}
               isLoading={isLoading && !stations.length}
               onSelect={(id) => setSelectedStationId(id)}
+              onLocate={(s) => {
+                setViewMode("map");
+                setHighlightedStationId(null);
+                setTimeout(() => setHighlightedStationId(s.id), 0);
+              }}
             />
           ) : (
             <>
@@ -335,6 +341,7 @@ export default function Home() {
                   onMapClick={(lat, lon) => setSelection([lat, lon])}
                   onSelectStation={(id) => setSelectedStationId(id)}
                   selection={selection}
+                  highlightedStationId={highlightedStationId}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">

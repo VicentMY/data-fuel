@@ -39,6 +39,7 @@ interface FuelMapProps {
   onSelectStation?: (id: string) => void;
   selection?: [number, number] | null;
   theme?: "light" | "dark";
+  highlightedStationId?: string | null;
 }
 
 export default function FuelMap({ 
@@ -49,7 +50,8 @@ export default function FuelMap({
   onMapClick,
   onSelectStation,
   selection,
-  theme = "dark" 
+  theme = "dark",
+  highlightedStationId
 }: FuelMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +59,29 @@ export default function FuelMap({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
   const selectionMarkerRef = useRef<L.Marker | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+
+  // Center map on highlighted station and open its popup
+  useEffect(() => {
+    if (!highlightedStationId) return;
+
+    const tryOpen = () => {
+      const marker = markersRef.current.get(highlightedStationId);
+      if (marker && mapRef.current) {
+        mapRef.current.flyTo(marker.getLatLng(), 16, { animate: true, duration: 0.8 });
+        setTimeout(() => marker.openPopup(), 900);
+        return true;
+      }
+      return false;
+    };
+
+    // Markers may not exist yet (list→map view switch race condition)
+    if (!tryOpen()) {
+      const retryId = setTimeout(tryOpen, 300);
+      return () => clearTimeout(retryId);
+    }
+  }, [highlightedStationId]);
+
 
   // Delegated event listener for popup buttons
   useEffect(() => {
@@ -196,54 +221,55 @@ export default function FuelMap({
 
   // Update markers
   useEffect(() => {
-    if (!mapRef.current || !markersLayerRef.current) return;
+  if (!mapRef.current || !markersLayerRef.current) return;
 
-    markersLayerRef.current.clearLayers();
+  markersLayerRef.current.clearLayers();
+  markersRef.current.clear(); // Limpiar mapa de referencias
 
-    stations.forEach((s) => {
-      if (!s.price) return;
+  stations.forEach((s) => {
+    if (!s.price) return;
 
-      const colorClass = s.price < 1.5 ? "cheap" : s.price < 1.65 ? "mid" : "expensive";
-      
-      const icon = L.divIcon({
-        className: "custom-div-icon",
-        html: `<div class="fuel-marker ${colorClass}">
-          <div class="fuel-marker-inner">${s.price.toFixed(3)}</div>
-        </div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
-        popupAnchor: [0, -36],
-      });
+    const colorClass = s.price < 1.5 ? "cheap" : s.price < 1.65 ? "mid" : "expensive";
 
-      const marker = L.marker([s.lat, s.lon], { icon })
-        .bindPopup(`
-          <div class="p-2 min-w-[200px]">
-            <div class="font-bold text-sm mb-1 text-[var(--text-primary)]">${s.name}</div>
-            <div class="text-xs text-[var(--text-secondary)] mb-2">${s.address}</div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-xs font-semibold opacity-70">Precio:</span>
-              <span class="text-sm font-black text-emerald-500">${s.price.toFixed(3)} €/L</span>
-            </div>
-            ${s.updatedAt ? `
-              <div class="text-[10px] text-[var(--text-secondary)] mb-3 opacity-80 flex items-center gap-1">
-                Actualizado: ${formatDate(s.updatedAt)}
-              </div>
-            ` : ""}
-            <button 
-              class="popup-ver-mas-btn w-full py-2 bg-[var(--accent-blue)] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all"
-              data-station-id="${s.id}"
-            >
-              Ver Más Detalles
-            </button>
-          </div>
-        `, {
-          className: 'custom-leaflet-popup'
-        })
-        .on("click", () => onMarkerClick?.(s));
-
-      markersLayerRef.current?.addLayer(marker);
+    const icon = L.divIcon({
+      className: "custom-div-icon",
+      html: `<div class="fuel-marker ${colorClass}">
+        <div class="fuel-marker-inner">${s.price.toFixed(3)}</div>
+      </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36],
     });
-  }, [stations, onMarkerClick]);
 
+    const marker = L.marker([s.lat, s.lon], { icon })
+      .bindPopup(`
+        <div class="p-2 min-w-[200px]">
+          <div class="font-bold text-sm mb-1 text-[var(--text-primary)]">${s.name}</div>
+          <div class="text-xs text-[var(--text-secondary)] mb-2">${s.address}</div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-semibold opacity-70">Precio:</span>
+            <span class="text-sm font-black text-emerald-500">${s.price.toFixed(3)} €/L</span>
+          </div>
+          ${s.updatedAt ? `
+            <div class="text-[10px] text-[var(--text-secondary)] mb-3 opacity-80 flex items-center gap-1">
+              Actualizado: ${formatDate(s.updatedAt)}
+            </div>
+          ` : ""}
+          <button 
+            class="popup-ver-mas-btn w-full py-2 bg-[var(--accent-blue)] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all"
+            data-station-id="${s.id}"
+          >
+            Ver Más Detalles
+          </button>
+        </div>
+      `, {
+        className: 'custom-leaflet-popup'
+      })
+      .on("click", () => onMarkerClick?.(s));
+
+    markersLayerRef.current?.addLayer(marker);
+    markersRef.current.set(s.id, marker); // Almacenar referencia
+  });
+  }, [stations, onMarkerClick]);
   return <div ref={containerRef} className="w-full h-full" />;
 }
