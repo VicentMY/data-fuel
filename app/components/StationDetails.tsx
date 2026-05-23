@@ -37,7 +37,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const filteredHistory = history.slice(-days);
+  const filteredHistory = days === 0 ? history : history.slice(-days);
 
   useEffect(() => {
     async function fetchData() {
@@ -122,7 +122,11 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: filteredHistory.map(h => new Date(h.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })),
+      data: filteredHistory.map(h => new Date(h.date).toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit',
+        year: '2-digit'
+      })),
       axisLine: { lineStyle: { color: 'rgba(0, 0, 0, 0.08)' } },
       axisLabel: { color: '#9ca3af' }
     },
@@ -211,7 +215,12 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: history.map(h => new Date(h.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })),
+      data: filteredHistory.map(h => new Date(h.date).toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit',
+        year: '2-digit'
+        // ...(days === 0 ? { year: '2-digit' } : {})
+      })),
       axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.07)' } },
       axisLabel: { color: '#484f58' }
     },
@@ -372,10 +381,10 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-2 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
                     <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
-                    Evolución de Precios ({days} días)
+                    Evolución {days === 0 ? 'Completa' : `(${days} días)`}
                   </div>
                   <div className="flex bg-[var(--bg-primary)] p-1 rounded-xl border border-[var(--border-subtle)]" style={{ padding: "1%" }}>
-                    {[7, 15, 30].map((d) => (
+                    {[7, 15, 30, 0].map((d) => (
                       <button
                         key={d}
                         onClick={() => setDays(d)}
@@ -386,7 +395,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                         }`}
                         style={{ margin: "0 5px", padding: "3px" }}
                       >
-                        {d}D
+                        {d === 0 ? "TODO" : `${d}D`}
                       </button>
                     ))}
                   </div>

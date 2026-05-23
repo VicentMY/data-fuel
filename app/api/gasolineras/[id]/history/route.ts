@@ -10,7 +10,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    // Fetch last 30 days of history
+    // Fetch history (all)
     const query = `
       SELECT 
         actualizado as date,
@@ -21,7 +21,6 @@ export async function GET(
         precio_glp as glp
       FROM estaciones_historico
       WHERE id_gasolinera = $1
-      AND actualizado >= NOW() - INTERVAL '30 days'
       ORDER BY actualizado ASC
     `;
 

@@ -24,18 +24,7 @@ export async function runInitialIngestion() {
     // Set ingesting status in DB for cross-process visibility
     await client.query("INSERT INTO system_config (key, value) VALUES ('is_ingesting', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true'");
 
-    // 2. Check latest historical date and save it
-    const lastHistoricRes = await client.query("SELECT MAX(actualizado) as last_historic FROM estaciones_historico");
-    const lastHistoric = lastHistoricRes.rows[0].last_historic;
-    if (lastHistoric) {
-      await client.query(
-        "INSERT INTO system_config (key, value) VALUES ('last_historic_date', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
-        [new Date(lastHistoric).toISOString()]
-      );
-      console.log(`[Ingestion] Last historic date tracked: ${lastHistoric}`);
-    }
-
-    // 3. Check if FULL initial ingestion is complete
+    // 2. Check if FULL initial ingestion is complete
     const initResult = await client.query("SELECT value FROM system_config WHERE key = 'initial_ingestion_complete'");
     const isInitComplete = initResult.rows.length > 0 && initResult.rows[0].value === 'true';
 
@@ -51,6 +40,10 @@ export async function runInitialIngestion() {
       const fInicio = new Date(2026, 0, 1);
       const fFin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
       await insertHistoricoMultithreaded(fInicio, fFin);
+      await client.query(
+        "INSERT INTO system_config (key, value) VALUES ('last_historic_date', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+        [fFin.toISOString()]
+      );
 
       await client.query("INSERT INTO system_config (key, value) VALUES ('initial_ingestion_complete', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true'");
       console.log("Full initial ingestion completed.");
@@ -76,6 +69,38 @@ export async function runInitialIngestion() {
         console.log("[Ingestion] Current prices updated successfully.");
       } catch (err) {
         console.warn("[Ingestion] Could not update current prices because the API is offline. Keeping existing database data.");
+      }
+
+      // Check if historical data is up to date
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      const lastHistoricRes = await client.query(
+        "SELECT value FROM system_config WHERE key = 'last_historic_date'"
+      );
+      const lastHistoricRaw = lastHistoricRes.rows[0]?.value;
+      const lastHistoric = lastHistoricRaw ? new Date(lastHistoricRaw) : null;
+
+      if (!lastHistoric || lastHistoric < yesterday) {
+        const fInicio = lastHistoric
+          ? new Date(lastHistoric.getTime() + 24 * 60 * 60 * 1000) // day after last historic
+          : new Date(2026, 0, 1);
+        const fFin = new Date(yesterday);
+
+        console.log(`[Ingestion] Historical data outdated. Filling gap: ${fInicio.toDateString()} → ${fFin.toDateString()}`);
+        try {
+          await insertHistoricoMultithreaded(fInicio, fFin);
+          await client.query(
+            "INSERT INTO system_config (key, value) VALUES ('last_historic_date', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+            [fFin.toISOString()]
+          );
+          console.log("[Ingestion] Historical gap filled and last_historic_date updated.");
+        } catch (histErr) {
+          console.error("[Ingestion] Failed to fill historical gap:", histErr);
+        }
+      } else {
+        console.log(`[Ingestion] Historical data is current (last: ${lastHistoricRaw}).`);
       }
     }
 
