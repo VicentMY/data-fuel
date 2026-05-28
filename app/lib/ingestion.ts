@@ -1,4 +1,4 @@
-import pool from "./db";
+import pool from "@/app/lib/db";
 import { Worker } from "worker_threads";
 import path from "path";
 
@@ -174,6 +174,20 @@ async function createTables(client: any) {
         precio_diesel_plus NUMERIC(5,3),
         precio_glp NUMERIC(5,3),
         actualizado TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS predicciones_provincia (
+        id_provincia VARCHAR(2) REFERENCES provincias(idprovincia),
+        provincia VARCHAR(100),
+        fecha DATE,
+        precio_g95 NUMERIC(5,3),
+        precio_g98 NUMERIC(5,3),
+        precio_diesel NUMERIC(5,3),
+        mae_g95 NUMERIC(6,4),
+        mae_g98 NUMERIC(6,4),
+        mae_diesel NUMERIC(6,4),
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_provincia, fecha)
     );
     COMMIT;
   `);

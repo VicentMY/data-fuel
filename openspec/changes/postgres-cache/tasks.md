@@ -1,25 +1,25 @@
 # Tasks: PostgreSQL Cache Migration
 
 ## Phase 1: Infrastructure & Setup
-- [ ] Install dependencies: `npm install pg` and `npm install -D @types/pg`
-- [ ] Create `app/lib/db.ts` with connection pool
-- [ ] Verify connection to local PostgreSQL database
+- [x] Install dependencies: `npm install pg` and `npm install -D @types/pg`
+- [x] Create `app/lib/db.ts` with connection pool
+- [x] Verify connection to local PostgreSQL database
 
 ## Phase 2: Database Initialization
-- [ ] Create SQL script for `stations` table creation
-- [ ] Execute script to initialize schema in `data_fuel` DB
+- [x] Create SQL script for `stations` table creation
+- [x] Execute script to initialize schema in `data_fuel` DB
 
 ## Phase 3: Implementation
-- [ ] Implement `fetchAndSync` logic to populate DB from MINETUR
-- [ ] Refactor `app/api/gasolineras/route.ts` to:
-    - [ ] Check cache timestamp from DB
-    - [ ] Trigger sync if necessary
-    - [ ] Query stations from DB
-    - [ ] Apply Haversine filtering and formatting
-- [ ] Implement price parsing logic for Spanish format ("1,234" -> 1.234)
+- [x] Implement `fetchAndSync` logic to populate DB from MINETUR
+- [x] Refactor `app/api/gasolineras/route.ts` to:
+    - [x] Check cache timestamp from DB
+    - [x] Trigger sync if necessary
+    - [x] Query stations from DB
+    - [x] Apply Haversine filtering and formatting
+- [x] Implement price parsing logic for Spanish format ("1,234" -> 1.234)
 
 ## Phase 4: Verification & Cleanup
-- [ ] Verify API response matches previous JSON-based response
-- [ ] Test cache expiration behavior
-- [ ] Delete `data/gasolineras_cache.json` and remove `fs` imports from route
-- [ ] [Optional] Optimize SQL query with a bounding box check
+- [x] Verify API response matches previous JSON-based response
+- [x] Test cache expiration behavior
+- [x] Delete `data/gasolineras_cache.json` and remove `fs` imports from route
+- [x] [Optional] Optimize SQL query with a bounding box check

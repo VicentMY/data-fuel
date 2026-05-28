@@ -57,3 +57,11 @@ scratch/
 tmp/
 *.log
 
+# Python prediction service
+python/predict_service/models/
+python/predict_service/__pycache__/
+python/predict_service/.venv/
+python/**/__pycache__/
+*.pkl
+*.pyc
+

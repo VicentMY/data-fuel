@@ -1,13 +1,5 @@
 const { parentPort, workerData } = require('worker_threads');
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  host: "localhost",
-  port: 5432,
-  database: "data_fuel",
-  user: "postgres",
-  password: "12344321",
-});
+import pool from "@/app/lib/db";
 
 const URL_BASE = "https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/";
 

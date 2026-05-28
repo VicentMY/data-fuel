@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
           address: s.direccion,
           locality: s.localidad,
           province: s.provincia,
+          id_provincia: s.id_provincia,
           cp: s.cp,
           schedule: s.horario,
           lat: sLat,
