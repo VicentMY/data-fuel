@@ -48,57 +48,120 @@ function FuelBadge({ label, price, mae, accentClass, iconBgClass }: FuelCardProp
     mae == null ? null : mae < 0.005 ? "down" : mae < 0.015 ? "flat" : "up";
 
   return (
-    <div
-      className={`flex min-w-0 bg-[var(--bg-secondary)] rounded-[var(--radius-md)] p-3 md:p-4 border border-[var(--border-subtle)] flex flex-col gap-1.5 transition-all hover:border-opacity-60 ${iconBgClass} custom-dialog`}
-    >
-      <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-        {label}
+    // <div
+    //   className={`flex min-w-0 bg-[var(--bg-secondary)] rounded-[var(--radius-md)] p-3 md:p-4 border border-[var(--border-subtle)] flex flex-col gap-1.5 transition-all hover:border-opacity-60 ${iconBgClass} custom-dialog`}
+    // >
+    //   <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+    //     {label}
+    //   </div>
+
+    //   {price == null ? (
+    //     <div className="text-sm font-bold text-[var(--text-muted)]">—</div>
+    //   ) : (
+    //     <div className="flex items-end gap-1">
+    //       <span className={`text-2xl md:text-3xl font-black leading-none tracking-tighter ${accentClass}`}>
+    //         {price.toFixed(3)}
+    //       </span>
+    //       <span className="text-[10px] font-black text-[var(--text-muted)] uppercase mb-0.5">
+    //         €/L
+    //       </span>
+    //     </div>
+    //   )}
+
+    //   {mae != null && (
+    //     <div className="flex items-center gap-1 mt-0.5">
+    //       {trend === "down" && (
+    //         <TrendingDown className="w-3 h-3 text-green-500 flex-shrink-0" />
+    //       )}
+    //       {trend === "flat" && (
+    //         <Minus className="w-3 h-3 text-amber-500 flex-shrink-0" />
+    //       )}
+    //       {trend === "up" && (
+    //         <TrendingUp className="w-3 h-3 text-rose-500 flex-shrink-0" />
+    //       )}
+    //       <span className="text-[9px] text-[var(--text-muted)] font-bold">
+    //         ±{mae.toFixed(4)} MAE
+    //       </span>
+    //     </div>
+    //   )}
+    // </div>
+    <div className={`flex items-center justify-between group bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full border border-[var(--border-subtle)] ${iconBgClass}`} style={{ padding: "1% 15px" }}>
+      <span className="text-sm font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{label}</span>
+      <div className="flex flex-col items-end">
+        <span className={`text-xl font-black ${accentClass}`}>
+          {price?.toFixed(3)}
+          <small className="text[10px] ml-0.5 opacity-70">€/L</small>
+        </span>
+        <span className={`text-[10px] font-bold flex items-center ${trend === "up" ? "text-rose-500" : trend === "down" ? "text-green-500" : "text-amber-500"}`}>
+          {trend === "up" && <TrendingUp className="w-3 h-3 mr-1" />}
+          {trend === "down" && <TrendingDown className="w-3 h-3 mr-1" />}
+          {trend === "flat" && <Minus className="w-3 h-3 mr-1" />}
+          {mae != null && `±${mae.toFixed(4)} MAE`}
+        </span>
       </div>
-
-      {price == null ? (
-        <div className="text-sm font-bold text-[var(--text-muted)]">—</div>
-      ) : (
-        <div className="flex items-end gap-1">
-          <span className={`text-2xl md:text-3xl font-black leading-none tracking-tighter ${accentClass}`}>
-            {price.toFixed(3)}
-          </span>
-          <span className="text-[10px] font-black text-[var(--text-muted)] uppercase mb-0.5">
-            €/L
-          </span>
-        </div>
-      )}
-
-      {mae != null && (
-        <div className="flex items-center gap-1 mt-0.5">
-          {trend === "down" && (
-            <TrendingDown className="w-3 h-3 text-green-500 flex-shrink-0" />
-          )}
-          {trend === "flat" && (
-            <Minus className="w-3 h-3 text-amber-500 flex-shrink-0" />
-          )}
-          {trend === "up" && (
-            <TrendingUp className="w-3 h-3 text-rose-500 flex-shrink-0" />
-          )}
-          <span className="text-[9px] text-[var(--text-muted)] font-bold">
-            ±{mae.toFixed(4)} MAE
-          </span>
-        </div>
-      )}
     </div>
   );
 }
 
 export default function PricePrediction({ 
   idProvincia, 
-  provinciaNombre 
+  provinciaNombre,
+  fuelType,
+  currentPrice
 }: { 
   idProvincia?: string | null;
   provinciaNombre?: string | null;
+  fuelType?: string;
+  currentPrice?: number | null;
 }) {
   const [data, setData] = useState<Prediction | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
+
+  const [advice, setAdvice] = useState<string | null>(null);
+  const [isAdviceLoading, setIsAdviceLoading] = useState(false);
+  const [adviceError, setAdviceError] = useState<string | null>(null);
+
+  const getAIAdvice = async () => {
+    if (!provinciaNombre || currentPrice == null || !data || !fuelType) {
+      setAdviceError("Faltan datos para generar el consejo.");
+      return;
+    }
+    
+    setIsAdviceLoading(true);
+    setAdviceError(null);
+    try {
+      const fuelKey = fuelType.toLowerCase() === "diesel" ? "diesel" : fuelType.toLowerCase();
+      const prediccion = data.predictions[fuelKey as keyof typeof data.predictions];
+      
+      if (prediccion == null) {
+        throw new Error("No hay predicción disponible.");
+      }
+
+      const res = await fetch("/api/ai-advice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provincia: provinciaNombre,
+          precio_actual: currentPrice.toFixed(3),
+          prediccion: prediccion.toFixed(3)
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Error al obtener consejo");
+      }
+
+      const result = await res.json();
+      setAdvice(result.advice);
+    } catch (e: any) {
+      setAdviceError(e.message);
+    } finally {
+      setIsAdviceLoading(false);
+    }
+  };
 
   const fetchPrediction = async () => {
     setLoading(true);
@@ -127,6 +190,12 @@ export default function PricePrediction({
       fetchPrediction();
     }
   }, [collapsed, data, loading, idProvincia]);
+
+  // Reset advice when fuelType or province changes
+  useEffect(() => {
+    setAdvice(null);
+    setAdviceError(null);
+  }, [fuelType, idProvincia]);
 
   const trainedAt = data?.trained_at
     ? new Date(data.trained_at).toLocaleDateString("es-ES", {
@@ -178,11 +247,6 @@ export default function PricePrediction({
         </div>
 
         <div className="flex items-center gap-2">
-          {trainedAt && !collapsed && (
-            <span className="text-[8px] text-[var(--text-muted)] font-bold bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full hidden sm:block">
-              Modelo: {trainedAt}
-            </span>
-          )}
           {collapsed ? (
             <ChevronDown className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors" />
           ) : (
@@ -222,8 +286,13 @@ export default function PricePrediction({
 
           {/* Prediction cards */}
           {!loading && data && !error && (
-            <>
-              <div className="space-y-4">
+            <div className="flex flex-col gap-4">
+              {trainedAt && (
+                <span className="text-[10px] text-[var(--text-muted)] font-bold bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full" style={{ textWrap: "nowrap", padding: "3%" }}>
+                  Datos del modelo: {trainedAt}
+                </span>
+              )}
+              <div className="flex flex-col gap-2">
                 <FuelBadge
                   label="Gasolina 95"
                   price={data.predictions.g95}
@@ -247,7 +316,7 @@ export default function PricePrediction({
                 />
               </div>
 
-              {/* Footer bar */}
+              {/* Information Bar */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 text-[9px] text-[var(--text-muted)] font-bold">
                   <Zap className="w-3 h-3 text-[var(--accent-purple)]" />
@@ -269,7 +338,35 @@ export default function PricePrediction({
                   Actualizar
                 </button>
               </div>
-            </>
+
+              {/* AI Advice Section */}
+              <div className="flex flex-col gap-2 border-t border-[var(--border-subtle)]">
+                <button
+                  onClick={getAIAdvice}
+                  disabled={isAdviceLoading || !provinciaNombre || currentPrice == null}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                >
+                  {isAdviceLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <BrainCircuit className="w-4 h-4" />
+                  )}
+                  <span className="text-sm">Consejo de IA</span>
+                </button>
+
+                {adviceError && (
+                  <p className="text-xs text-rose-500 font-bold mt-2 text-center">{adviceError}</p>
+                )}
+
+                {advice && (
+                  <div className="mt-3 p-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--accent-purple)]/30 animate-fade-in-up custom-container">
+                    <p className="text-xs text-[var(--text-primary)] font-medium leading-relaxed">
+                      "{advice}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

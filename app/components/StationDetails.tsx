@@ -384,10 +384,10 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
               {/* Prediction Card */}
               {prediction && prediction.predictions && (
                 <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm relative overflow-hidden custom-container">
-                  <div className="absolute top-0 right-0 bg-[var(--accent-blue)] text-white text-[9px] font-black uppercase px-2 py-1 rounded-bl-lg">
+                  <div className="absolute top-0 right-0 bg-[var(--accent-blue)] text-white text-[9px] font-black uppercase px-2 py-1 rounded-bl-lg" style={{ padding: "2px 5%" }}>
                     Mañana
                   </div>
-                  <div className="flex items-center gap-2 mb-4 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
+                  <div className="flex items-center gap-2 mb-4 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs" style={{ marginTop: "3%" }}>
                     <TrendingUp className="w-4 h-4 text-[var(--accent-blue)]" />
                     Predicciones de Precios
                   </div>

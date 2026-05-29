@@ -10,8 +10,8 @@ interface SidebarProps {
   setRadius: (r: number) => void;
   fuelType: string;
   setFuelType: (f: string) => void;
-  brand: string;
-  setBrand: (b: string) => void;
+  brands: string[];
+  setBrands: (b: string[]) => void;
   isOpen: boolean;
   onResetSelection: () => void;
   isSelectionActive: boolean;
@@ -25,6 +25,7 @@ interface SidebarProps {
   onLocationSelect?: (lat: number, lon: number) => void;
   idProvincia?: string | null;
   provinciaNombre?: string | null;
+  currentPrice?: number | null;
 }
 
 const fuelTypes = [
@@ -33,15 +34,15 @@ const fuelTypes = [
   { id: "G98", label: "Gasolina 98", icon: Zap, color: "bg-blue-500" },
 ];
 
-const brands = ["Repsol", "Cepsa", "BP", "Galp", "Shell", "Petronor", "Plenoil"];
+const brandsList = ["Repsol", "Cepsa", "BP", "Galp", "Shell", "Petronor", "Plenoil"];
 
 export default function Sidebar({
   radius,
   setRadius,
   fuelType,
   setFuelType,
-  brand,
-  setBrand,
+  brands,
+  setBrands,
   isOpen,
   onResetSelection,
   isSelectionActive,
@@ -55,6 +56,7 @@ export default function Sidebar({
   onLocationSelect,
   idProvincia,
   provinciaNombre,
+  currentPrice,
 }: SidebarProps) {
   return (
     <aside
@@ -170,6 +172,8 @@ export default function Sidebar({
             <PricePrediction
               idProvincia={idProvincia}
               provinciaNombre={provinciaNombre}
+              fuelType={fuelType}
+              currentPrice={currentPrice}
             />
           </div>
         </section>
@@ -216,30 +220,33 @@ export default function Sidebar({
             Marcas favoritas
           </div>
           <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-            {brands.map((b) => (
-              <label
-                key={b}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] cursor-pointer transition-all border",
-                  brand === b
-                    ? "bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] text-[var(--accent-blue)]"
-                    : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
-                )}
-                onClick={() => setBrand(brand === b ? "" : b)}
-              >
-                <div
+            {brandsList.map((b) => {
+              const isActive = brands.includes(b);
+              return (
+                <label
+                  key={b}
                   className={cn(
-                    "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                    brand === b
-                      ? "bg-[var(--accent-blue)] border-[var(--accent-blue)]"
-                      : "border-[var(--text-muted)]"
+                    "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] cursor-pointer transition-all border",
+                    isActive
+                      ? "bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] text-[var(--accent-blue)]"
+                      : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   )}
+                  onClick={() => setBrands(isActive ? brands.filter(i => i !== b) : [...brands, b])}
                 >
-                  {brand === b && <Check className="w-3 h-3 text-white" />}
-                </div>
-                <span className="text-xs font-bold whitespace-nowrap">{b}</span>
-              </label>
-            ))}
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                      isActive
+                        ? "bg-[var(--accent-blue)] border-[var(--accent-blue)]"
+                        : "border-[var(--text-muted)]"
+                    )}
+                  >
+                    {isActive && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-xs font-bold whitespace-nowrap">{b}</span>
+                </label>
+              );
+            })}
           </div>
         </section>
 

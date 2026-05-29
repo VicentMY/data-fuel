@@ -40,7 +40,7 @@ interface Station {
 export default function Home() {
   const [radius, setRadius] = useState(5);
   const [fuelType, setFuelType] = useState("G95");
-  const [brand, setBrand] = useState("");
+  const [brands, setBrands] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [selection, setSelection] = useState<[number, number] | null>(null);
@@ -218,7 +218,7 @@ export default function Home() {
 
   // Derived data
   const filteredStations = stations.filter(s => {
-    const matchesBrand = !brand || s.brand.toLowerCase().includes(brand.toLowerCase());
+    const matchesBrand = brands.length === 0 || brands.some(b => s.brand.toLowerCase().includes(b.toLowerCase()));
     const matchesUpdated = !onlyUpdatedToday || apiStatus === "offline" || isUpdatedToday(s.updatedAt);
     const matchesOpen = !onlyOpenNow || isOpenNow(s.schedule);
     
@@ -231,6 +231,11 @@ export default function Home() {
     
   const nearest = filteredStations.length > 0 
     ? [...filteredStations].sort((a, b) => a.dist - b.dist)[0] 
+    : null;
+
+  const stationsWithPrice = filteredStations.filter(s => s.price !== null);
+  const currentPrice = stationsWithPrice.length > 0
+    ? stationsWithPrice.reduce((acc, s) => acc + s.price!, 0) / stationsWithPrice.length
     : null;
 
   return (
@@ -304,8 +309,8 @@ export default function Home() {
           setRadius={setRadius}
           fuelType={fuelType}
           setFuelType={setFuelType}
-          brand={brand}
-          setBrand={setBrand}
+          brands={brands}
+          setBrands={setBrands}
           isOpen={isSidebarOpen}
           onResetSelection={() => setSelection(null)}
           isSelectionActive={!!selection}
@@ -322,6 +327,7 @@ export default function Home() {
           }}
           idProvincia={nearest?.id_provincia || null}
           provinciaNombre={nearest?.province || null}
+          currentPrice={currentPrice}
         />
         <main className="flex-1 relative overflow-hidden">
           {viewMode === "list" ? (
@@ -365,7 +371,7 @@ export default function Home() {
                 <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-4 py-3 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)] custom-container">
                   <h4 className="text-sm font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
                   <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
-                    {stations.length} estaciones encontradas
+                    {filteredStations.length} estaciones encontradas
                   </p>
                 </div>
               </div>
