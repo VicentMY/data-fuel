@@ -3,6 +3,7 @@
 import { Search, MapPin, Fuel, Zap, Droplet, Clock, Check, X } from "lucide-react";
 import { cn } from "@/app/lib/utils";
 import LocationSearch from "./LocationSearch";
+import PricePrediction from "./PricePrediction";
 
 interface SidebarProps {
   radius: number;
@@ -22,6 +23,8 @@ interface SidebarProps {
   apiStatus: "online" | "offline";
   onClose: () => void;
   onLocationSelect?: (lat: number, lon: number) => void;
+  idProvincia?: string | null;
+  provinciaNombre?: string | null;
 }
 
 const fuelTypes = [
@@ -50,6 +53,8 @@ export default function Sidebar({
   apiStatus,
   onClose,
   onLocationSelect,
+  idProvincia,
+  provinciaNombre,
 }: SidebarProps) {
   return (
     <aside
@@ -66,7 +71,7 @@ export default function Sidebar({
       >
         <X className="w-5 h-5" />
       </button>
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-3">
         {/* Search Header */}
         <section>
           {lastUpdated && (
@@ -122,10 +127,8 @@ export default function Sidebar({
               <MapPin className={cn("w-5 h-5", !isSelectionActive ? "text-[var(--accent-blue)]" : "")} />
               Ubicación actual
             </button>
-            <div
-             style={{ padding: "1%" }}
-             className={cn(
-              "w-full flex items-center gap-3 px-5 py-4 border rounded-[var(--radius-lg)] text-sm font-medium transition-all",
+            <div className={cn(
+              "w-full flex items-center gap-3 px-5 py-4 border rounded-[var(--radius-lg)] text-sm font-medium transition-all custom-dialog",
               isSelectionActive 
                 ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-sm"
                 : "bg-transparent border-transparent text-[var(--text-muted)] opacity-50 cursor-not-allowed"
@@ -137,7 +140,7 @@ export default function Sidebar({
         </section>
 
         {/* Radius Slider */}
-        <section className="bg-[var(--bg-secondary)]/50 p-6 rounded-[var(--radius-xl)] border border-[var(--border-subtle)]" style={{ padding: "5%" }}>
+        <section className="bg-[var(--bg-secondary)]/50 p-6 rounded-[var(--radius-xl)] border border-[var(--border-subtle)] custom-container">
           <div className="flex justify-between items-center mb-6">
             <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)]">
               Radio de búsqueda
@@ -161,6 +164,16 @@ export default function Sidebar({
           </div>
         </section>
 
+        {/* Prediction */}
+        <section>
+          <div className="mb-8">
+            <PricePrediction
+              idProvincia={idProvincia}
+              provinciaNombre={provinciaNombre}
+            />
+          </div>
+        </section>
+
         {/* Fuel Types */}
         <section>
           <div className="uppercase text-[10px] font-bold tracking-widest text-[var(--text-muted)] mb-5">
@@ -175,12 +188,11 @@ export default function Sidebar({
                   key={type.id}
                   onClick={() => setFuelType(type.id)}
                   className={cn(
-                    "flex items-center justify-between px-5 py-4 rounded-[var(--radius-lg)] transition-all border group",
+                    "flex items-center justify-between px-5 py-4 rounded-[var(--radius-lg)] transition-all border group custom-container",
                     isActive
                       ? "bg-[var(--bg-card)] border-[var(--border-active)] text-[var(--text-primary)] shadow-md"
                       : "bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   )}
-                  style={{ padding: "5%" }}
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
@@ -238,7 +250,7 @@ export default function Sidebar({
           </div>
           
           <div className="grid grid-cols-1 gap-2">
-            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm custom-container">
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-green-500" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Abierto ahora</span>
@@ -259,7 +271,7 @@ export default function Sidebar({
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm" style={{ padding: "5%" }}>
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-sm custom-container">
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Actualizado hoy</span>

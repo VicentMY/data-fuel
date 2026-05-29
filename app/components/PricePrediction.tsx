@@ -49,8 +49,7 @@ function FuelBadge({ label, price, mae, accentClass, iconBgClass }: FuelCardProp
 
   return (
     <div
-      className={`flex-1 min-w-0 bg-[var(--bg-secondary)] rounded-[var(--radius-md)] p-3 md:p-4 border border-[var(--border-subtle)] flex flex-col gap-1.5 transition-all hover:border-opacity-60 ${iconBgClass}`}
-      style={{ padding: "3% "}}
+      className={`flex min-w-0 bg-[var(--bg-secondary)] rounded-[var(--radius-md)] p-3 md:p-4 border border-[var(--border-subtle)] flex flex-col gap-1.5 transition-all hover:border-opacity-60 ${iconBgClass} custom-dialog`}
     >
       <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]">
         {label}
@@ -147,7 +146,7 @@ export default function PricePrediction({
     : null;
 
   return (
-    <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] rounded-[var(--radius-xl)] shadow-2xl overflow-hidden animate-fade-in-up [animation-delay:150ms]" style={{padding: "3%", minWidth: "500px"}}>
+    <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] rounded-[var(--radius-xl)] shadow-2xl overflow-hidden animate-fade-in-up [animation-delay:150ms]" style={{padding: "3%"}}>
       {/* Header */}
       <button
         onClick={() => setCollapsed((c) => !c)}
@@ -224,7 +223,7 @@ export default function PricePrediction({
           {/* Prediction cards */}
           {!loading && data && !error && (
             <>
-              <div className="flex gap-2 mb-3">
+              <div className="space-y-4">
                 <FuelBadge
                   label="Gasolina 95"
                   price={data.predictions.g95}

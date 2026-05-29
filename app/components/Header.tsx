@@ -36,7 +36,7 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
 
       <div className="flex items-center gap-4 sm:gap-6">
         {/* Map / List view toggle */}
-        <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl gap-2" style={{ padding: "1%" }}>
+        <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl gap-2 custom-dialog">
           <button
             onClick={() => viewMode !== "map" && onViewToggle()}
             title="Vista mapa"

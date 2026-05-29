@@ -9,8 +9,12 @@ async function processDates() {
   
   try {
     for (const dateStr of dates) {
-      const idcca = "10"; // As in the original script
-      const url = `${URL_BASE}EstacionesTerrestresHist/FiltroCCAA/${dateStr}/${idcca}`;
+      // Solo Valencia
+      // const idcca = "10"; // As in the original script
+      // const url = `${URL_BASE}EstacionesTerrestresHist/FiltroCCAA/${dateStr}/${idcca}`;
+
+      // España
+      const url = `${URL_BASE}EstacionesTerrestresHist/${dateStr}`;
       
       const res = await fetch(url);
       const data = await res.json();

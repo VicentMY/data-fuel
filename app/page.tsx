@@ -316,9 +316,13 @@ export default function Home() {
           lastUpdated={lastUpdated}
           apiStatus={apiStatus}
           onClose={() => setIsSidebarOpen(false)}
-          onLocationSelect={(lat, lon) => setSelection([lat, lon])}
+          onLocationSelect={(lat, lon) => {
+            setSelection([lat, lon]);
+            setLocation([lat, lon]);
+          }}
+          idProvincia={nearest?.id_provincia || null}
+          provinciaNombre={nearest?.province || null}
         />
-
         <main className="flex-1 relative overflow-hidden">
           {viewMode === "list" ? (
             <StationList
@@ -347,26 +351,18 @@ export default function Home() {
                   highlightedStationId={highlightedStationId}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
-                  <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4" style={{ padding: "5% 15px" }}>
-                    <Loader2 className="w-12 h-12 animate-spin text-[var(--accent-blue)] mx-auto mb-4" />
-                    <p className="text-[var(--text-secondary)] font-medium">Obteniendo ubicación...</p>
+                <div className="absolute inset-0 z-[1100] bg-black/20 backdrop-blur-[2px] flex items-center justify-center">
+                  <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 custom-dialog">
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
+                    <span className="text-sm font-bold text-[var(--text-primary)]">Obteniendo ubicación...</span>
                   </div>
                 </div>
               )}
 
               {/* Map Overlays */}
-              <div className="absolute top-4 md:top-8 left-4 md:left-8 z-[1000] flex flex-col gap-3 pointer-events-none w-[min(340px,calc(100vw-2rem))]">
-                {/* Prediction card */}
-                <div className="pointer-events-auto">
-                  <PricePrediction 
-                    idProvincia={nearest?.id_provincia || null}
-                    provinciaNombre={nearest?.province || null}
-                  />
-                </div>
-
+              <div className="absolute top-4 md:top-8 left-4 md:left-8 z-[1000] flex flex-col gap-3 pointer-events-none">
                 {/* Area info card */}
-                <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-4 py-3 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)]" style={{ padding: "5% 10px "}}>
+                <div className="bg-[var(--bg-card)]/90 backdrop-blur-xl border border-[var(--border-subtle)] px-4 py-3 rounded-[var(--radius-xl)] shadow-2xl pointer-events-auto border-l-4 border-l-[var(--accent-blue)] custom-container">
                   <h4 className="text-sm font-black text-[var(--text-primary)] leading-tight">{nearest?.locality || "Área detectada"}</h4>
                   <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">
                     {stations.length} estaciones encontradas
@@ -393,7 +389,7 @@ export default function Home() {
 
           {isLoading && !stations.length && (
             <div className="absolute inset-0 z-[1100] bg-black/20 backdrop-blur-[2px] flex items-center justify-center">
-              <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4" style={{ padding: "5% 15px" }}>
+              <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 custom-dialog">
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)]">Actualizando precios...</span>
               </div>
@@ -402,11 +398,11 @@ export default function Home() {
 
           {error && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1200]">
-              <div className="bg-red-500/10 backdrop-blur-md border border-red-500/50 rounded-2xl shadow-2xl flex flex-col items-center gap-4 text-center" style={{ padding: "5% 15px" }}>
+              <div className="bg-red-500/10 backdrop-blur-md border border-red-500/50 rounded-2xl shadow-2xl flex flex-col items-center gap-4 text-center custom-container">
                 <AlertCircle className="w-8 h-8 text-red-500" />
                 <div>
                   <h3 className="font-bold mb-1 text-[var(--text-primary)]">Algo salió mal</h3>
-                  <p className="text-xs text-[var(--text-secondary)] max-w-[200px]" style={{ textWrap: 'auto' }}>{error}</p>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-[200px]">{error}</p>
                 </div>
                 <button 
                   onClick={fetchStations}

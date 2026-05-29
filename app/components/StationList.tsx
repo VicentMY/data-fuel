@@ -127,8 +127,7 @@ function PriceBadge({ rank, price }: { rank: number; price: number | null }) {
       </span>
       {rank < 3 && (
         <span
-          className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r ${gradient}`}
-          style={{ padding: "1% 5px" }}
+          className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r custom-badge ${gradient}`}
         >
           {rank === 0 ? "🏆 Más barato" : rank === 1 ? "2.º" : "3.º"}
         </span>
@@ -215,7 +214,7 @@ export default function StationList({
   return (
     <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex-shrink-0" style={{ padding: "1%" }}>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex-shrink-0 custom-dialog" >
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-[var(--accent-blue)]" />
           <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -341,8 +340,7 @@ export default function StationList({
                         e.stopPropagation();
                         onSelect(station.id);
                       }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
-                      style={{ padding: "5% 10px" }}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all custom-dialog"
                     >
                       Ver Más
                       <ChevronRight className="w-3.5 h-3.5" />

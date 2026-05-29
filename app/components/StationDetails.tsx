@@ -33,6 +33,7 @@ interface StationDetailsProps {
 export default function StationDetails({ stationId, onClose }: StationDetailsProps) {
   const [station, setStation] = useState<any>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [prediction, setPrediction] = useState<any>(null);
   const [days, setDays] = useState(7);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +45,10 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
       setIsLoading(true);
       setError(null);
       try {
-        const [stationRes, historyRes] = await Promise.all([
+        const [stationRes, historyRes, predRes] = await Promise.all([
           fetch(`/api/gasolineras/${stationId}`),
-          fetch(`/api/gasolineras/${stationId}/history`)
+          fetch(`/api/gasolineras/${stationId}/history`),
+          fetch(`/api/gasolineras/${stationId}/prediccion`).catch(() => null)
         ]);
 
         if (!stationRes.ok || !historyRes.ok) throw new Error("Error al cargar datos");
@@ -56,6 +58,11 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
 
         setStation(stationData.station);
         setHistory(historyData.history);
+
+        if (predRes && predRes.ok) {
+          const predData = await predRes.json();
+          setPrediction(predData);
+        }
       } catch (err) {
         console.error(err);
         setError("No se pudo cargar la información de la estación.");
@@ -69,10 +76,10 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-        <div className="bg-[var(--bg-card)] rounded-3xl p-8 flex flex-col items-center gap-4 shadow-2xl" style={{ padding: "1%" }}>
-          <Loader2 className="w-10 h-10 animate-spin text-[var(--accent-blue)]" />
-          <p className="font-bold text-[var(--text-primary)]">Cargando detalles...</p>
+      <div className="absolute inset-0 z-[1100] bg-black/20 backdrop-blur-[2px] flex items-center justify-center">
+        <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 custom-dialog">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-blue)]" />
+          <span className="text-sm font-bold text-[var(--text-primary)]">Cargando detalles...</span>
         </div>
       </div>
     );
@@ -299,7 +306,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
           </div>
         </div>
 
-        <div className="pt-16 px-12 pb-12" style={{ padding: "2%" }}>
+        <div className="pt-16 px-12 pb-12" style={{ padding: "3%" }}>
           {/* Title & Badge */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
@@ -307,16 +314,16 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                 {station.name}
               </h2>
               <div className="flex items-center gap-4 text-[var(--text-secondary)] font-medium flex-wrap">
-                <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]" style={{ padding: "1% 5px", margin: "1% 0 5% 0" }}>
+                <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)] custom-badge">
                   <MapPin className="w-4 h-4 text-[var(--accent-blue)]" />
                   {station.locality}, {station.province}
                 </span>
-                <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]" style={{ padding: "1% 5px", margin: "1% 0 5% 0" }}>
+                <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)] custom-badge">
                   <Clock className="w-4 h-4 text-[var(--accent-blue)]" />
                   {station.schedule?.toLowerCase().includes("24h") ? "Abierto 24h" : "Ver horario abajo"}
                 </span>
                 {station.updatedAt && (
-                  <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]" style={{ padding: "1% 5px", margin: "1% 0 5% 0" }}>
+                  <span className="flex items-center gap-1.5 bg-[var(--bg-secondary)] px-3 py-1 rounded-lg border border-[var(--border-subtle)] custom-badge">
                     <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
                     Actualizado: {formatDate(station.updatedAt)}
                   </span>
@@ -329,7 +336,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
             {/* Left: Info & Prices */}
             <div className="lg:col-span-1 flex flex-col gap-6">
               {/* Prices Card */}
-              <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm" style={{ padding: "5%" }}>
+              <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm custom-container">
                 <div className="flex items-center gap-2 mb-6 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
                   <TrendingUp className="w-4 h-4 text-[var(--accent-blue)]" />
                   Precios Actuales
@@ -354,7 +361,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
               </div>
 
               {/* Details Card */}
-              <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm" style={{ padding: "5%" }}>
+              <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm custom-container">
                 <div className="flex items-center gap-2 mb-4 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
                   <Info className="w-4 h-4 text-[var(--accent-blue)]" />
                   Información
@@ -373,6 +380,46 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                   </div>
                 </div>
               </div>
+
+              {/* Prediction Card */}
+              {prediction && prediction.predictions && (
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[1.5rem] p-6 shadow-sm relative overflow-hidden custom-container">
+                  <div className="absolute top-0 right-0 bg-[var(--accent-blue)] text-white text-[9px] font-black uppercase px-2 py-1 rounded-bl-lg">
+                    Mañana
+                  </div>
+                  <div className="flex items-center gap-2 mb-4 text-[var(--text-primary)] font-black uppercase tracking-wider text-xs">
+                    <TrendingUp className="w-4 h-4 text-[var(--accent-blue)]" />
+                    Predicciones de Precios
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { label: "Gasolina 95", price: prediction.predictions.g95, current: prediction.current.g95, color: "text-green-500" },
+                      { label: "Gasolina 98", price: prediction.predictions.g98, current: prediction.current.g98, color: "text-blue-500" },
+                      { label: "Diésel A", price: prediction.predictions.diesel, current: prediction.current.diesel, color: "text-orange-500" }
+                    ].map((p, i) => {
+                      if (!p.price) return null;
+                      const diff = p.price - p.current;
+                      const isUp = diff > 0;
+                      return (
+                        <div key={i} className="flex items-center justify-between group">
+                          <span className="text-sm font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                            {p.label}
+                          </span>
+                          <div className="flex flex-col items-end">
+                            <span className={`text-xl font-black ${p.color}`}>
+                              {p.price.toFixed(3)}
+                              <small className="text-[10px] ml-0.5 opacity-70">€/L</small>
+                            </span>
+                            <span className={`text-[10px] font-bold flex items-center ${isUp ? 'text-red-500' : diff < 0 ? 'text-green-500' : 'text-gray-500'}`}>
+                              {isUp ? '↑' : diff < 0 ? '↓' : '='} {Math.abs(diff).toFixed(3)}€
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right: Evolution Graph */}
@@ -383,7 +430,7 @@ export default function StationDetails({ stationId, onClose }: StationDetailsPro
                     <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
                     Evolución {days === 0 ? 'Completa' : `(${days} días)`}
                   </div>
-                  <div className="flex bg-[var(--bg-primary)] p-1 rounded-xl border border-[var(--border-subtle)]" style={{ padding: "1%" }}>
+                  <div className="flex bg-[var(--bg-primary)] p-1 rounded-xl border border-[var(--border-subtle)] custom-dialog">
                     {[7, 15, 30, 0].map((d) => (
                       <button
                         key={d}

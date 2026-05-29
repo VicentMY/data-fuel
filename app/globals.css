@@ -64,7 +64,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  text-wrap: nowrap;
 }
 
 html,
@@ -89,6 +88,20 @@ aside,
 section,
 button {
   padding: 1%;
+}
+
+/* Custom styles */
+.custom-container {
+  padding: 5% 10px;
+}
+
+.custom-dialog {
+  padding: 1%;
+}
+
+.custom-badge {
+  padding: 1% 5px;
+  margin: 1% 0 5% 0;
 }
 
 /* ─── Leaflet overrides ─── */
