@@ -24,7 +24,7 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
           <div className="w-10 h-10 bg-[var(--accent-blue)] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
             <FuelIcon className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-black tracking-tight hidden sm:block text-[var(--text-primary)]">
+          <h1 className="text-2xl font-black tracking-tight hidden sm:block text-[var(--text-primary)] custom-title">
             Fuel<span className="text-[var(--accent-blue)]">Cartographer</span>
           </h1>
         </div>
@@ -69,15 +69,15 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
           >
             {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <button className="p-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xl transition-all relative">
+          {/* <button className="p-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xl transition-all relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--bg-primary)]"></span>
-          </button>
+          </button> */}
         </nav>
         
         <div className="w-px h-8 bg-[var(--border-subtle)] mx-1 sm:mx-2"></div>
         
-        <button className="flex items-center gap-3 p-1.5 pl-1.5 pr-5 hover:bg-[var(--bg-secondary)] rounded-2xl transition-all border border-transparent hover:border-[var(--border-subtle)] shadow-sm bg-[var(--bg-secondary)]/30">
+        {/* <button className="flex items-center gap-3 p-1.5 pl-1.5 pr-5 hover:bg-[var(--bg-secondary)] rounded-2xl transition-all border border-transparent hover:border-[var(--border-subtle)] shadow-sm bg-[var(--bg-secondary)]/30">
           <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-sm font-black text-white shadow-md">
             JD
           </div>
@@ -85,7 +85,7 @@ export default function Header({ onMenuClick, theme, onThemeToggle, onLocationSe
             <span className="text-sm font-bold text-[var(--text-primary)] leading-tight">Usuario Demo</span>
             <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">Premium Plan</span>
           </div>
-        </button>
+        </button> */}
       </div>
     </header>
   );

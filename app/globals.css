@@ -91,6 +91,17 @@ button {
 }
 
 /* Custom styles */
+.custom-title {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .custom-title {
+    font-size: 90%;
+  }
+}
+
+
 .custom-container {
   padding: 5% 10px;
 }

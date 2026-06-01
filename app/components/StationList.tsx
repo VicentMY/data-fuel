@@ -67,6 +67,21 @@ function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
+export function effectiveFuelPrice(
+  fuelPrice: number,
+  distanceKm: number,
+  litersToRefuel: number = 30,
+  consumptionL100Km: number = 7
+): number {
+  const travelCost =
+    distanceKm *
+    (consumptionL100Km / 100) *
+    fuelPrice;
+
+  return fuelPrice + travelCost / litersToRefuel;
+}
+
+
 function SortButton({
   label,
   icon,
@@ -83,7 +98,7 @@ function SortButton({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${active
+      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border w-full ${active
         ? "bg-[var(--accent-blue)] text-white border-[var(--accent-blue)] shadow-lg shadow-blue-500/20"
         : "bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--accent-blue)]/50 hover:text-[var(--text-primary)]"
         }`}
@@ -103,7 +118,7 @@ function SortButton({
   );
 }
 
-function PriceBadge({ rank, price }: { rank: number; price: number | null }) {
+function PriceBadge({ rank, price, sortKey }: { rank: number; price: number | null; sortKey: SortKey }) {
   if (price === null)
     return (
       <span className="text-xs text-[var(--text-muted)] font-bold">N/D</span>
@@ -116,20 +131,31 @@ function PriceBadge({ rank, price }: { rank: number; price: number | null }) {
   ];
   const gradient = rank < 3 ? colors[rank] : null;
 
+  const getLabel = () => {
+    if (rank !== 0) return rank === 1 ? "2.º" : "3.º";
+    
+    switch (sortKey) {
+      case "price": return "🏆 Más barato";
+      case "dist": return "🏆 Más cerca";
+      case "price-dist": return "🏆 Recomendado";
+      default: return "🏆 Top";
+    }
+  };
+
   return (
     <div className="flex flex-col items-end gap-1">
       <span
-        className={`text-2xl font-black tracking-tight ${rank === 0 ? "text-amber-400" : "text-[var(--text-primary)]"
+        className={`text-2xl font-black tracking-tight ${rank === 0 && sortKey != "locality" ? "text-amber-400" : "text-[var(--text-primary)]"
           }`}
       >
         {price.toFixed(3)}
         <span className="text-sm font-bold ml-0.5 opacity-70">€</span>
       </span>
-      {rank < 3 && (
+      {rank < 3 && sortKey != "locality" && (
         <span
           className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r custom-badge ${gradient}`}
         >
-          {rank === 0 ? "🏆 Más barato" : rank === 1 ? "2.º" : "3.º"}
+          {getLabel()}
         </span>
       )}
     </div>
@@ -143,7 +169,7 @@ export default function StationList({
   onSelect,
   onLocate,
 }: StationListProps) {
-  const [sortKey, setSortKey] = useState<SortKey>("price");
+  const [sortKey, setSortKey] = useState<SortKey>("price-dist");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   function handleSort(key: SortKey) {
@@ -165,9 +191,14 @@ export default function StationList({
       } else if (sortKey === "dist") {
         cmp = a.dist - b.dist;
       } else if (sortKey === "price-dist") {
-        const pa = a.price ?? 99999;
-        const pb = b.price ?? 99999;
-        cmp = (pa * 10 + a.dist * 0.5) - (pb * 10 + b.dist * 0.5);
+        const pa = a.price;
+        const pb = b.price;
+        if (pa === null && pb === null) cmp = 0;
+        else if (pa === null) cmp = 1;
+        else if (pb === null) cmp = -1;
+        else {
+          cmp = effectiveFuelPrice(pa, a.dist) - effectiveFuelPrice(pb, b.dist);
+        }
       } else if (sortKey === "locality") {
         cmp = a.locality.localeCompare(b.locality, "es");
       }
@@ -175,15 +206,35 @@ export default function StationList({
     });
   }, [stations, sortKey, sortDir]);
 
-  // Precompute price rank (always by ascending price, for the badge)
-  const priceRankMap = useMemo(() => {
-    const ranked = [...stations]
-      .filter((s) => s.price !== null)
-      .sort((a, b) => (a.price ?? 99999) - (b.price ?? 99999));
+  // Precompute rank based on current sort criteria
+  const rankMap = useMemo(() => {
+    const sorted = [...stations].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "price") {
+        const pa = a.price ?? 99999;
+        const pb = b.price ?? 99999;
+        cmp = pa - pb;
+      } else if (sortKey === "dist") {
+        cmp = a.dist - b.dist;
+      } else if (sortKey === "price-dist") {
+        const pa = a.price;
+        const pb = b.price;
+        if (pa === null && pb === null) cmp = 0;
+        else if (pa === null) cmp = 1;
+        else if (pb === null) cmp = -1;
+        else {
+          cmp = effectiveFuelPrice(pa, a.dist) - effectiveFuelPrice(pb, b.dist);
+        }
+      } else if (sortKey === "locality") {
+        cmp = a.locality.localeCompare(b.locality, "es");
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
     const map = new Map<string, number>();
-    ranked.forEach((s, i) => map.set(s.id, i));
+    sorted.forEach((s, i) => map.set(s.id, i));
     return map;
-  }, [stations]);
+  }, [stations, sortKey, sortDir]);
 
   if (isLoading) {
     return (
@@ -214,43 +265,51 @@ export default function StationList({
   return (
     <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex-shrink-0 custom-dialog" >
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex-shrink-0 custom-dialog gap-4">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <Trophy className="w-4 h-4 text-[var(--accent-blue)]" />
           <span className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
             {sorted.length} estaciones ·{" "}
             {FUEL_LABELS[fuelType] || fuelType}
           </span>
         </div>
-        <div className="flex items-center gap-2" style={{ padding: "0 3%" }}>
-          <SortButton
-            label="Precio"
-            icon={<Fuel className="w-3.5 h-3.5" />}
-            active={sortKey === "price"}
-            direction={sortDir}
-            onClick={() => handleSort("price")}
-          />
-          <SortButton
-            label="Distancia"
-            icon={<Navigation2 className="w-3.5 h-3.5" />}
-            active={sortKey === "dist"}
-            direction={sortDir}
-            onClick={() => handleSort("dist")}
-          />
-          <SortButton
-            label="Recomendado"
-            icon={<Star className="w-3.5 h-3.5" />}
-            active={sortKey === "price-dist"}
-            direction={sortDir}
-            onClick={() => handleSort("price-dist")}
-          />
-          <SortButton
-            label="Municipio"
-            icon={<MapPin className="w-3.5 h-3.5" />}
-            active={sortKey === "locality"}
-            direction={sortDir}
-            onClick={() => handleSort("locality")}
-          />
+        <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-nowrap md:w-auto md:justify-end">
+          <div className="w-full md:w-auto">
+            <SortButton
+              label="Recomendado"
+              icon={<Star className="w-3.5 h-3.5" />}
+              active={sortKey === "price-dist"}
+              direction={sortDir}
+              onClick={() => handleSort("price-dist")}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <SortButton
+              label="Precio"
+              icon={<Fuel className="w-3.5 h-3.5" />}
+              active={sortKey === "price"}
+              direction={sortDir}
+              onClick={() => handleSort("price")}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <SortButton
+              label="Distancia"
+              icon={<Navigation2 className="w-3.5 h-3.5" />}
+              active={sortKey === "dist"}
+              direction={sortDir}
+              onClick={() => handleSort("dist")}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <SortButton
+              label="Municipio"
+              icon={<MapPin className="w-3.5 h-3.5" />}
+              active={sortKey === "locality"}
+              direction={sortDir}
+              onClick={() => handleSort("locality")}
+            />
+          </div>
         </div>
       </div>
 
@@ -258,8 +317,8 @@ export default function StationList({
       <div className="flex-1 overflow-y-auto">
         <div className="divide-y divide-[var(--border-subtle)]">
           {sorted.map((station, idx) => {
-            const priceRank = priceRankMap.get(station.id) ?? 999;
-            const isTop = priceRank === 0;
+            const rank = rankMap.get(station.id) ?? 999;
+            const isTop = rank === 0 && sortKey != "locality";
 
             return (
               <div
@@ -272,18 +331,16 @@ export default function StationList({
               >
                 {/* Rank number */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black ${sortKey === "price"
-                    ? idx === 0
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black ${rank < 3 && sortKey != "locality"
+                    ? rank === 0
                       ? "bg-amber-400/20 text-amber-400"
-                      : idx === 1
+                      : rank === 1
                         ? "bg-slate-400/20 text-slate-400"
-                        : idx === 2
-                          ? "bg-orange-600/20 text-orange-500"
-                          : "bg-[var(--bg-card)] text-[var(--text-muted)]"
+                        : "bg-orange-600/20 text-orange-500"
                     : "bg-[var(--bg-card)] text-[var(--text-muted)]"
                     }`}
                 >
-                  {idx + 1}
+                  {rank + 1}
                 </div>
 
                 {/* Station info */}
@@ -321,7 +378,7 @@ export default function StationList({
 
                 {/* Price */}
                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                  <PriceBadge rank={priceRank} price={station.price} />
+                  <PriceBadge rank={rank} price={station.price} sortKey={sortKey} />
                   <div className="flex items-center gap-2">
                     {onLocate && (
                       <button
@@ -340,13 +397,14 @@ export default function StationList({
                         e.stopPropagation();
                         onSelect(station.id);
                       }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all custom-dialog"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-blue)] text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all" style={{ textWrap: "nowrap" }}
                     >
                       Ver Más
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                </div>              </div>
+                </div>
+              </div>
             );
           })}
         </div>

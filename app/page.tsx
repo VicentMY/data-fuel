@@ -58,6 +58,7 @@ export default function Home() {
 
   // Background ingestion tracking
   const [isIngesting, setIsIngesting] = useState(false);
+  const [isHistoricalIngesting, setIsHistoricalIngesting] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<"online" | "offline">("online");
@@ -90,8 +91,9 @@ export default function Home() {
       try {
         const res = await fetch("/api/status");
         if (!res.ok) return;
-        const { isIngesting: ing, lastUpdated: lu, apiStatus: apiSt } = await res.json();
+        const { isIngesting: ing, isHistoricalIngesting: histIng, lastUpdated: lu, apiStatus: apiSt } = await res.json();
         setIsIngesting(ing);
+        setIsHistoricalIngesting(histIng);
         if (apiSt) setApiStatus(apiSt);
         
         if (lu) {
@@ -107,7 +109,7 @@ export default function Home() {
           // Initial check: if not ingesting but updated recently (< 60s), show success banner ONCE
           if (!hasCheckedInitialStatus.current) {
             hasCheckedInitialStatus.current = true;
-            if (!ing) {
+            if (!ing && !histIng) {
               const secondsSinceUpdate = (new Date().getTime() - lastDate.getTime()) / 1000;
               if (secondsSinceUpdate < 60) {
                 setJustFinished(true);
@@ -118,7 +120,7 @@ export default function Home() {
         }
 
         // Transition: was ingesting → now done → reload stations
-        if (wasIngesting.current && !ing) {
+        if (wasIngesting.current && !ing && !histIng) {
           setJustFinished(true);
           // Clear client cache so fresh data is fetched, not cached stale data
           sessionStorage.clear();
@@ -126,11 +128,11 @@ export default function Home() {
           setTimeout(() => setJustFinished(false), 5000);
         }
         
-        wasIngesting.current = ing;
+        wasIngesting.current = ing || histIng;
 
         // If we were ingesting and now it's done, or if it was never ingesting and we've done the initial check,
         // we can potentially stop the interval if ing is false and the API status is online.
-        if (!ing && apiSt === 'online' && pollingRef.current && hasCheckedInitialStatus.current) {
+        if (!ing && !histIng && apiSt === 'online' && pollingRef.current && hasCheckedInitialStatus.current) {
            // We keep it running if the API is offline to detect when it recovers.
            clearInterval(pollingRef.current);
            pollingRef.current = null;
@@ -250,7 +252,7 @@ export default function Home() {
       />
 
       {/* Ingestion status banner — between header and content, full width */}
-      {(isIngesting || justFinished) && (
+      {(isIngesting || isHistoricalIngesting || justFinished) && (
         <div
           className={`flex items-center gap-4 px-8 py-3.5 text-sm font-bold border-b shadow-xl transition-all duration-700 relative z-[50] ${
             justFinished
@@ -271,8 +273,10 @@ export default function Home() {
                 <RefreshCw className="w-5 h-5 animate-spin text-amber-950 flex-shrink-0" />
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                <span className="tracking-tight text-base">Obteniendo nuevos precios...</span>
-                {lastUpdated && (
+                <span className="tracking-tight text-base">
+                  {isHistoricalIngesting ? `Obteniendo históricos. Última fecha: ${lastUpdated}` : "Obteniendo nuevos precios..."}
+                </span>
+                {!isHistoricalIngesting && lastUpdated && (
                   <span className="bg-amber-950/10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider w-fit">
                     Última versión: {lastUpdated}
                   </span>
@@ -323,7 +327,6 @@ export default function Home() {
           onClose={() => setIsSidebarOpen(false)}
           onLocationSelect={(lat, lon) => {
             setSelection([lat, lon]);
-            setLocation([lat, lon]);
           }}
           idProvincia={nearest?.id_provincia || null}
           provinciaNombre={nearest?.province || null}
