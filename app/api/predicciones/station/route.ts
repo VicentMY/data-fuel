@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-const PYTHON_SERVICE = process.env.PREDICT_SERVICE_URL ?? "http://localhost:8001";
+const PYTHON_PORT = process.env.PREDICT_API_PORT ?? 4001;
+const PYTHON_SERVICE = process.env.PREDICT_SERVICE_URL ?? `http://localhost:${PYTHON_PORT}`;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

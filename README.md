@@ -24,10 +24,11 @@
 ### Requisitos Previos
 
 - **Node.js**: v20 o superior.
-- **PostgreSQL**: Una instancia activa con las siguientes credenciales (por defecto):
+- **PostgreSQL**: Una instancia activa con las siguientes credenciales (ejemplo):
   - Base de datos: `data_fuel`
-  - Usuario: `postgres`
-  - Password: `12344321`
+  - Usuario: `fuel_admin`
+  - Password: `secure_password`
+- **.ENV**: Crea un archivo ".env" a partir del ejemplo ".example-env" y completa con tus credenciales.
 
 ### Instalación
 
@@ -42,10 +43,17 @@
    pnpm install
    ```
 
-3. Levanta el entorno de desarrollo:
+3. Levanta el entorno de desarrollo o producción:
    ```bash
-   pnpm dev
+   pnpm dev # Desarrollo
+
+   pnpm build # Producción
+   pnpm start # Producción
    ```
+
+4. Accede a la aplicación:
+   - En el navegador: http://localhost:4000/
+
 
 La aplicación iniciará automáticamente el proceso de ingesta de datos históricos y actuales en el primer arranque a través del sistema de `instrumentation` de Next.js.
 

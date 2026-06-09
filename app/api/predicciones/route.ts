@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/app/lib/db";
 
-const PYTHON_SERVICE = process.env.PREDICT_SERVICE_URL ?? "http://localhost:8001";
+const PYTHON_PORT = process.env.PREDICT_API_PORT ?? 4001;
+const PYTHON_SERVICE = process.env.PREDICT_SERVICE_URL ?? `http://localhost:${PYTHON_PORT}`;
 
 export async function GET(req: NextRequest) {
   try {

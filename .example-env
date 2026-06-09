@@ -1,0 +1,14 @@
+# PostgreSQL DB
+DB_PORT=
+DB_HOST=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+
+# Random Forest prediction python API
+PREDICT_API_PORT=
+PREDICT_SERVICE_URL=
+
+# Next.js App
+PORT=
+GEMINI_API_KEY=

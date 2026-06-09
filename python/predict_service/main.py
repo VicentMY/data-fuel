@@ -1,6 +1,6 @@
 """
 main.py — FastAPI prediction microservice
-Ports: 8001
+Ports: 4001
 Endpoints:
   GET  /health               → service + model status
   POST /train                → trigger model (re)training
@@ -9,6 +9,7 @@ Endpoints:
 
 import logging
 import os
+from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -18,6 +19,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from train import train_all
 from predict import predict_tomorrow, models_exist, save_meta
+
+# ── Load Environment Variables ─────────────────────────────────────────────────
+load_dotenv()
+app_port = int(os.getenv("PORT", 4000))
+predict_port = int(os.getenv("PREDICT_API_PORT", 4001))
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -87,7 +93,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[f"http://localhost:{app_port}", f"http://localhost:{predict_port}"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -151,4 +157,4 @@ async def predict_tomorrow_route():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=predict_port, reload=False)
