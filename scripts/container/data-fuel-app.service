@@ -1,0 +1,14 @@
+[Unit]
+Description Podman compose for Data-Fuel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/data-fuel
+ExecStart=/usr/bin/podman-compose start
+ExecStop=/usr/bin/podman-compose stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

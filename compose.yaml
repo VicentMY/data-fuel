@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: data-fuel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      #- ./scripts/data_fuel.sql:/docker-entrypoint-initdb.d/data_fuel.sql:ro # Uncomment if you want to load from a backup (in scripts/data_fuel.sql).
+    ports:
+      - "${DB_PORT}:5432"
+
+  app:
+    image: datafuel_app
+    container_name: data-fuel_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+      - PREDICT_API_PORT=${PREDICT_API_PORT}
+      - PREDICT_SERVICE_URL=${PREDICT_SERVICE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "${PORT}:${PORT}"
+      - "${PREDICT_API_PORT}:${PREDICT_API_PORT}"
+
+volumes:
+  pgdata:

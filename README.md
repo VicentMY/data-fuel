@@ -19,7 +19,7 @@
 - **Base de Datos**: [PostgreSQL](https://www.postgresql.org/).
 - **Iconografía**: [Lucide React](https://lucide.dev/).
 
-## ⚙️ Configuración y Requisitos
+## 🔧 Configuración y Requisitos
 
 ### Requisitos Previos
 
@@ -30,7 +30,7 @@
   - Password: `secure_password`
 - **.ENV**: Crea un archivo ".env" a partir del ejemplo ".example-env" y completa con tus credenciales.
 
-### Instalación
+### ⚙️ Instalación
 
 1. Clona el repositorio:
    ```bash
@@ -38,21 +38,64 @@
    cd data-fuel
    ```
 
-2. Instala las dependencias:
+2. Prepara el entorno python:
+   ```bash
+   python -m venv python/predict_service/.venv
+   source python/predict_service/.venv/bin/activate
+   pip install -r python/predict_service/requirements.txt
+   ```
+
+3. Instala las dependencias:
    ```bash
    pnpm install
    ```
 
-3. Levanta el entorno de desarrollo o producción:
+4. Arranca la aplicación:
+   
+   4.1. Utiliza el script de arranque:
    ```bash
-   pnpm dev # Desarrollo
+   chmod +x ./start.sh
+   ./start.sh &
+   ```
+   
+   4.2. Alternativa: Arranque manual:
+   - Levanta la api de predicciones:
+    ```bash
+    source python/predict_service/.venv/bin/activate
+    python predict_api.py &
+    ```
+   - Levanta la app Next.js:
+    ```bash
+    pnpm build
+    pnpm start
+    ```
 
-   pnpm build # Producción
-   pnpm start # Producción
+5. Accede a la aplicación:
+   - En el navegador: http://localhost:4000/
+
+### 📦 Dockerización
+
+1. Requisitos previos:
+   - **Docker/Podman + Compose**
+   - **Opcional**: Copia de seguridad de la base de datos en `./scripts/data_fuel.sql`
+
+2. Generar la imagen y arrancar la aplicación:
+   ```bash
+   podman-compose up
    ```
 
-4. Accede a la aplicación:
-   - En el navegador: http://localhost:4000/
+3. Activar el autoarranque en el arranque de la maquina:
+
+   3.1. Copia el servicio al sistema (revisa las rutas en el archivo):
+   ```bash
+   sudo cp ./scripts/container/data-fuel-app.service /etc/systemd/system/
+   ```
+
+   3.2. Recarga el listado de servicios del sistema y activa el servicio:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable data-fuel-app.service
+   ```
 
 
 La aplicación iniciará automáticamente el proceso de ingesta de datos históricos y actuales en el primer arranque a través del sistema de `instrumentation` de Next.js.
@@ -67,4 +110,4 @@ El sistema utiliza un patrón de **Ingesta Desatendida**:
 
 ## 📜 Licencia
 
-Este proyecto está bajo la Licencia MIT.
+Este proyecto está bajo la Licencia MIT. Puedes ver más en `LICENSE.md`

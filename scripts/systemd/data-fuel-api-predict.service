@@ -1,0 +1,12 @@
+[Unit]
+Description=Data Fuel Python API Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/data-fuel
+ExecStart=/usr/bin/bash /opt/data-fuel/scripts/systemd/data-fuel-python-run.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -65,3 +65,5 @@ python/**/__pycache__/
 *.pkl
 *.pyc
 
+# DB backups
+scripts/*.sql
